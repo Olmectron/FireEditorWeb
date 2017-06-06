@@ -1,0 +1,94 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="shared-styles.html">
+
+
+<dom-module id="hair-view">
+  <template>
+    <style include="shared-styles iron-flex iron-flex-alignment">
+      :host {
+        position:absolute;
+		height:128px;
+		width:128px;
+		max-width: 128px;
+		max-height: 128px;
+		
+      }
+
+		.hairCanvas{
+	    position:relative;
+		
+		
+    	
+		}
+	  </style>
+	<canvas id="hairCanvas" width="128" height="128"></canvas>
+  
+  </template>
+
+  <script>
+    class HairView extends Polymer.Element {
+      static get is() { return 'hair-view'; }
+	  ready(){
+		super.ready();
+		this.set("loaded",true);
+
+				
+		
+	  }
+	  setHairData(src,color,loaded){
+		if(src && color && loaded){
+		
+		var c=this.$.hairCanvas;
+		var ctx = c.getContext('2d');
+
+                //Loading of the home test image - img1
+                var img1 = new Image();
+                img1.src = src;
+				color=color.replace("#","");
+				var rrr=parseInt("0x"+color.substring(0,2));
+				var ggg=parseInt("0x"+color.substring(2,4));
+				var bbb=parseInt("0x"+color.substring(4,6));
+				
+//					console.log(rrr,ggg,bbb);
+                img1.onload = function () {
+                    ctx.drawImage(img1, 0, 0,128,128);
+                   var imgData=ctx.getImageData(0,0,128,128);
+					for (var i=0;i<imgData.data.length;i+=4)
+					  {
+					  imgData.data[i]=rrr;
+					  imgData.data[i+1]=ggg;
+					  imgData.data[i+2]=bbb;
+					  
+					  }
+					ctx.putImageData(imgData,0,0,0,0,128,128);
+
+                };
+		}
+	  
+	  }
+	  static get observers() {
+        return [
+          'setHairData(src,color,loaded)'
+		  
+        ];
+      }
+	  
+    }
+
+    window.customElements.define(HairView.is, HairView);
+  </script>
+</dom-module>

@@ -1,0 +1,246 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<dom-module id="my-unit">
+  <template>
+   
+  </template>
+
+  <script>
+    class MyUnit extends Polymer.Element {
+      static get is() { return 'my-unit'; }
+	  
+	  static get properties() {
+        return {
+            id:Number,
+			properName:String,
+			gender:String,
+			name:String,
+			hexBlock:{
+				type:String,
+				
+				notify:true
+			},
+			hexPosition:Number,
+			hairColorEditable:Boolean,
+				nameEditable:Boolean,
+                appearanceEditable:Boolean,
+				child:Boolean,
+                portraitVariable:Boolean,
+                avatar:Boolean,
+                important:Boolean,
+                dlcSpotpass:Boolean,
+				blockData: Object,
+				alive: Boolean,
+				portrait:Object
+    
+		  
+		  };
+		  
+		  }
+		  hexBlockChanged(block){
+		  //console.log("Block changed!",this.id);
+			if(!block){
+			//	console.log("Block is null");
+				return;
+			}
+		  
+			this.set("blockData",new Object());
+			var unit=this;
+			
+		   var statsBlock=block.substring(20,36);
+        this.set("blockData.unitHP",parseInt("0x"+statsBlock.substring(0,2)));
+        this.set("blockData.unitSTR",parseInt("0x"+statsBlock.substring(2,4)));
+        this.set("blockData.unitMAG",parseInt("0x"+statsBlock.substring(4,6)));
+        this.set("blockData.unitSKL",parseInt("0x"+statsBlock.substring(6,8)));
+        this.set("blockData.unitSPD",parseInt("0x"+statsBlock.substring(8,10)));
+        this.set("blockData.unitLCK",parseInt("0x"+statsBlock.substring(10,12)));
+        this.set("blockData.unitDEF",parseInt("0x"+statsBlock.substring(12,14)));
+        this.set("blockData.unitRES",parseInt("0x"+statsBlock.substring(14,16)));
+        this.set("blockData.unitAddedMovement",parseInt("0x"+block.substring(42,44)));
+		  
+		  
+		  if(unit.nameEditable){
+//		  console.log(unit.properName);
+        this.set("blockData.unitId",block.substring(4,6));
+        
+        var nameStart=block.
+                indexOf(Hex.FFFF_IDENTIFIER)+
+                Hex.FFFF_IDENTIFIER.length+30;
+				
+                var nameHex=
+                        trimBinaryZeroValueBytes(block.
+                                substring(nameStart,nameStart+48));
+								
+						//		console.log(nameHex);
+								
+                this.set("name",getWordFromHex(nameHex));
+				 this.set("blockData.unitName",getWordFromHex(nameHex));
+                
+        }                
+         if(unit.avatar || unit.dlcSpotpass){
+             
+        
+         var startGender=block.indexOf(Hex.FFFF_IDENTIFIER)
+                +Hex.FFFF_IDENTIFIER.length+38+48;
+         
+         
+                var asset=block.substring(startGender-4,startGender-2);
+                var flaw=block.substring(startGender-2,startGender);
+				
+                this.set("blockData.unitAsset",parseInt("0x"+asset));
+                this.set("blockData.unitFlaw",parseInt("0x"+flaw));
+           
+                var gender=block.substring(startGender,startGender+2);
+                var build=block.substring(startGender+2,startGender+4);
+                var face=block.substring(startGender+4,startGender+6);
+                var hair=block.substring(startGender+6,startGender+8);
+                var hairColorString=block.substring(startGender+8,startGender+14);
+                
+				this.set("blockData.unitHairColor","#"+hairColorString);
+				this.set("blockData.unitBody",build);
+				this.set("blockData.unitFace",face);
+
+				this.set("blockData.unitHair",hair);
+				this.set("blockData.unitGender",gender);
+				this.set("blockData.birthDay",block.substring(startGender+18, startGender+20));
+				this.set("blockData.birthMonth",block.substring(startGender+20, startGender+22));
+				this.set("blockData.unitSpotpassCode",block.substring(startGender+22, startGender+24));
+         
+         
+         }
+         if(unit.child && unit.hairColorEditable){
+					
+					var start=block.indexOf(Hex.F_BLOCK_STARTER)+96;
+						
+						
+						
+				                        var hairColorString=block.substring(start,start+6);
+					this.set("blockData.unitHairColor","#"+hairColorString);
+			                                                
+         }
+         if(unit.avatar || !unit.nameEditable){
+            var blockLeft=block.substring(52);
+            var startAliveHex=blockLeft.indexOf("FFFF")-(8);
+            
+            if(blockLeft.substring(startAliveHex,startAliveHex+2)==("08")){
+                this.set("alive",false);
+               
+                
+            }
+            else if(blockLeft.substring(startAliveHex+2,startAliveHex+4)==("04")
+                    || blockLeft.substring(startAliveHex,startAliveHex+8)==("00000000")
+                    ){
+                this.set("alive",true);
+                
+            }
+            
+         }
+		  
+		  this.setPortraitData(block);
+		  
+		  
+		  
+		  }
+		  
+		  
+		  setPortraitData(block){
+		  
+			this.set("portrait",new Object());
+		  var unit=this;
+	    var rootDirectory="units";
+        
+        if(!unit.portraitVariable){
+            this.set("portrait.baseName",R.imagesPath+"/"+rootDirectory+"/"+unit.properName.toLowerCase()+".png");
+        }
+        else if(unit.avatar && unit.hairColorEditable && unit.appearanceEditable){
+            this.set("portrait.baseName",R.imagesPath+"/"+rootDirectory+"/"+unit.properName.toLowerCase()+
+                        "/"+"build_"+unit.blockData.unitBody+"_"+unit.blockData.unitFace+".png");
+            this.set("portrait.backName",R.imagesPath+"/"+rootDirectory+"/"+unit.properName.toLowerCase()+
+                        "/"+"back_"+unit.blockData.unitBody+"_"+unit.blockData.unitHair+".png");
+            this.set("portrait.hairName",R.imagesPath+"/"+rootDirectory+"/"+unit.properName.toLowerCase()+
+                        "/"+"hair_"+unit.blockData.unitBody+"_"+unit.blockData.unitHair+".png");
+        }
+        else if(unit.isDLCUnit()){
+           this.set("portrait.baseName",R.imagesPath+"/"+rootDirectory+"/spotpass/dlc"+unit.blockData.unitFace+".png"); 
+            
+        }
+        else if(unit.isSpotpassUnit()){
+           
+           this.set("portrait.baseName",R.imagesPath+"/"+rootDirectory+"/spotpass/"+unit.blockData.unitSpotpassCode+".png"); 
+        }
+        else if(unit.isLogbookAvatar()){
+            var pathName="avatar_"+unit.retrieveGenderLetter().toLowerCase();
+            //System.out.println("Body: "+unit.blockData.unitBody+", Hair: "+unit.blockData.unitFace+", Face: "+unit.blockData.unitFace);
+            this.set("portrait.baseName",R.imagesPath+"/"+rootDirectory+"/"+pathName+
+                        "/"+"build_"+unit.blockData.unitBody+"_"+unit.blockData.unitFace+".png");
+            this.set("portrait.backName",R.imagesPath+"/"+rootDirectory+"/"+pathName+
+                        "/"+"back_"+unit.blockData.unitBody+"_"+unit.blockData.unitHair+".png");
+            this.set("portrait.hairName",R.imagesPath+"/"+rootDirectory+"/"+pathName+
+                        "/"+"hair_"+unit.blockData.unitBody+"_"+unit.blockData.unitHair+".png");
+        }
+        else if(unit.child && unit.hairColorEditable){
+            this.set("portrait.baseName",R.imagesPath+"/"+rootDirectory+"/children/"+unit.properName.toLowerCase()+".png");
+            this.set("portrait.backName",R.imagesPath+"/"+rootDirectory+"/children/"+unit.properName.toLowerCase()+"_shadow.png");
+            this.set("portrait.hairName",R.imagesPath+"/"+rootDirectory+"/children/"+unit.properName.toLowerCase()+"_hair.png");
+        }
+        else{
+            this.set("portrait.baseName",R.imagesPath+"/"+rootDirectory+"/unknown.png");
+        }
+        if(this.portrait.baseName==null){
+            this.set("portrait.baseName",R.imagesPath+"/"+rootDirectory+"/unknown.png");
+        }
+        
+		  
+		  
+		  }
+		  
+		  
+		  hasBirthday(){
+    return ((parseInt("0x"+this.blockData.birthDay) + parseInt("0x"+this.blockData.birthMonth))!=0);
+        
+    
+}
+isDLCUnit(){
+    return this.dlcSpotpass && this.retrieveFace()>5 && !this.hasBirthday();
+}
+isSpotpassUnit(){
+    
+    return this.dlcSpotpass && this.retrieveFace()<5 && !this.hasBirthday();
+
+}
+isLogbookAvatar(){
+    return this.dlcSpotpass && this.retrieveFace()<5 && this.hasBirthday();
+    
+}
+retrieveFace(){
+    return parseInt("0x"+this.blockData.unitFace);
+    
+}
+retrieveGenderLetter(){
+    var gender=parseInt("0x"+this.blockData.unitGender);
+    if(gender==0){
+        return "m";
+    }
+    else if(gender==1){
+        return "f";
+    }
+    else return "u";
+}
+		  
+	  
+	  
+    }
+
+    window.customElements.define(MyUnit.is, MyUnit);
+  </script>
+</dom-module>

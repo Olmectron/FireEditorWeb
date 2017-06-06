@@ -1,0 +1,72 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="shared-styles.html">
+
+<link rel="import" href="hair-view.html">
+<dom-module id="my-view1">
+  <template>
+    <style include="shared-styles iron-flex iron-flex-alignment">
+      :host {
+        display: block;
+
+		
+      }
+	  
+	  .unitName{
+		color: var(--paper-indigo-500);
+		font-weight:500;
+		text-align: center;
+	  }
+    </style>
+	<div class="horizontal layout flex wrap center-justified" style="padding: 2rem;">
+	<template is="dom-repeat" items="[[units]]" scroll-target="document">
+	
+			<div style="padding: 10px;">
+			<div class="card card-1 vertical layout">
+				
+				<div style="position:relative; width: 128px; height: 128px;">
+				<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.baseName]]">
+				</iron-image>
+	<!--			<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.backName]]">
+				</iron-image>-->
+				<hair-view src="[[item.portrait.backName]]" color="[[item.blockData.unitHairColor]]"></hair-view>
+				
+				
+				<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.hairName]]">
+				</iron-image>
+				
+				</div>
+				
+				<div class="unitName flex" style="padding-top: 6px;">[[item.name]]</div>
+			</div>
+			</div>
+		</template>
+		</div>
+  
+  </template>
+
+  <script>
+    class MyView1 extends Polymer.Element {
+      static get is() { return 'my-view1'; }
+	  ready(){
+		super.ready();
+		
+	  }
+    }
+
+    window.customElements.define(MyView1.is, MyView1);
+  </script>
+</dom-module>
