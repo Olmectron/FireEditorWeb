@@ -17,6 +17,7 @@
     "manifest.json",
     "bower_components/webcomponentsjs/*.js",
 	"scripts/*.js",
+	"scripts/*.css",
 	"res/images/units/**/*",
 	"res/values/strings/**/*"
 	

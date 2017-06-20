@@ -15,8 +15,8 @@ module.exports = {
     '/index.html',
     '/manifest.json',
     '/bower_components/webcomponentsjs/*',
-	"/scripts/app.js",
-	"/scripts/clipboard.min.js",
+	"/scripts/*",
+	
 	"/res/values/strings/*",
 	"/res/images/units/**/*"
   ],

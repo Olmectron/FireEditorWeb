@@ -18,6 +18,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-ripple/paper-ripple.html">
 
 
+
 <link rel="import" href="hair-view.html">
 <dom-module id="unit-item">
   <template>
@@ -46,6 +47,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	  }
 	  .colorBox{
 		height: 100%; width: 15px;
+		 box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
 	  }
     </style>
 	
@@ -66,13 +70,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				
 				</div>
 <div style="position: relative;" class="flex horizontal layout">
-				<div class="colorBox" id="colorBox" style$="background-color: [[getRippleColor(item)]];"></div>
-				<paper-tooltip for="colorBox">[[getRippleColor(item)]]</paper-tooltip>
+				<div class="colorBox" id="colorBox"
+					on-click="showColorPicker"
+				style$="background-color: [[item.blockData.unitHairColor]];"
+				>
+				<input type='text' id="full" style="width: 100%; height: 100%;"/>
+
+				</div>
+				<paper-tooltip for="colorBox">[[item.blockData.unitHairColor]]</paper-tooltip>
 				<div class="unitName flex vertical layout center-justified">[[item.name]]</div>
+				
 				
 				<!--<div class="darker" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; right: 0; bottom: 0;"></div>
 				--></div>
-				<paper-ripple style$="color: [[getRippleColor(item)]];"></paper-ripple>
+				<paper-ripple style$="color: [[item.blockData.unitHairColor]];"></paper-ripple>
 			</div>
 			</div>
 		
@@ -82,10 +93,72 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     class UnitItem extends Polymer.Element {
       static get is() { return 'unit-item'; }
+	  static get properties() {
+        return {
+          selColor: {
+            type: String,
+            notify:true,
+			observer: "_colorChanged"
+			
+           
+          },
+		  item:{
+			type:Object,
+			notify:true,
+			reflectToAttribute: true
+		  }
+		};
+		}
+	  
+	  _colorChanged(val){
+		console.log(val);
+	  
+	  }
+	  
+	  showColorPicker(){
+		//console.log("Picker");
+		//this.$.full.click();
+	  }
+	  
 	  ready(){
 		super.ready();
 		var esto=this;
-		var clipboard=new Clipboard(this.$.colorBox, {
+		
+		
+	$(this.$.full).spectrum({
+    color: esto.getRippleColor(esto.item),
+    showInput: true,
+    className: "full-spectrum",
+    showInitial: true,
+	
+    showSelectionPalette: true,
+    maxSelectionSize: 10,
+    preferredFormat: "hex",
+    localStorageKey: "spectrum.demo",
+    move: function (color) {
+        
+    },
+    show: function () {
+    
+    },
+    beforeShow: function () {
+    
+    },
+    hide: function () {
+    
+    },
+    change: function(color) {
+//        console.log(color.toHexString());
+		esto.set("item.blockData.unitHairColor",color.toHexString().toUpperCase());
+    }
+});
+
+$(this.$.full).next(".sp-replacer").css("opacity","0.0");
+$(this.$.full).next(".sp-replacer").css("height","100%");
+$(this.$.full).next(".sp-replacer").css("width","100%");
+
+		
+	/*	var clipboard=new Clipboard(this.$.colorBox, {
     text: function(trigger) {
 	//console.log(esto.getRippleColor(esto.item));
         return esto.getRippleColor(esto.item);
@@ -93,7 +166,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 });
 clipboard.on('success', function(e) {
     showToast(esto.item.name+"'s hair color code copied to clipboard!",7000);
-});
+});*/
 		
 	  }
 	  getRippleColor(item){
