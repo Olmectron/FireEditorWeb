@@ -1,0 +1,114 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-tooltip/paper-tooltip.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="shared-styles.html">	
+<link rel="import" href="../bower_components/paper-ripple/paper-ripple.html">
+
+
+<link rel="import" href="hair-view.html">
+<dom-module id="unit-item">
+  <template>
+    <style include="shared-styles iron-flex iron-flex-alignment">
+      :host {
+        display: block;
+
+		
+      }
+	  
+	  
+	  .unitName{
+		color: var(--paper-indigo-600);
+		font-weight:500;
+		text-align: center;
+	  }
+	  .card{
+		cursor: pointer;
+	  
+	  }
+	  paper-ripple{
+	  
+	  }
+	  .darker{
+		background-color: rgba(0,0,0,0.3);
+	  }
+	  .colorBox{
+		height: 100%; width: 15px;
+	  }
+    </style>
+	
+	
+			<div style="padding: 10px;">
+			<div class="card card-1 vertical layout" style="position: relative;">
+				
+				<div style="position:relative; width: 128px; height: 128px;">
+				<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.baseName]]">
+				</iron-image>
+	<!--			<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.backName]]">
+				</iron-image>-->
+				<hair-view src="[[item.portrait.backName]]" color="[[item.blockData.unitHairColor]]"></hair-view>
+				
+				
+				<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.hairName]]">
+				</iron-image>
+				
+				</div>
+<div style="position: relative;" class="flex horizontal layout">
+				<div class="colorBox" id="colorBox" style$="background-color: [[getRippleColor(item)]];"></div>
+				<paper-tooltip for="colorBox">[[getRippleColor(item)]]</paper-tooltip>
+				<div class="unitName flex vertical layout center-justified">[[item.name]]</div>
+				
+				<!--<div class="darker" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; right: 0; bottom: 0;"></div>
+				--></div>
+				<paper-ripple style$="color: [[getRippleColor(item)]];"></paper-ripple>
+			</div>
+			</div>
+		
+  
+  </template>
+
+  <script>
+    class UnitItem extends Polymer.Element {
+      static get is() { return 'unit-item'; }
+	  ready(){
+		super.ready();
+		var esto=this;
+		var clipboard=new Clipboard(this.$.colorBox, {
+    text: function(trigger) {
+	//console.log(esto.getRippleColor(esto.item));
+        return esto.getRippleColor(esto.item);
+    }
+});
+clipboard.on('success', function(e) {
+    showToast(esto.item.name+"'s hair color code copied to clipboard!",7000);
+});
+		
+	  }
+	  getRippleColor(item){
+		if(item.blockData && item.blockData.unitHairColor){
+			return item.blockData.unitHairColor;
+			
+		}
+		else return "red";
+	  }
+	  
+	  
+		  
+		  
+    }
+
+    window.customElements.define(UnitItem.is, UnitItem);
+  </script>
+</dom-module>

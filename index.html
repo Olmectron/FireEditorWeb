@@ -59,9 +59,44 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       // Load and register pre-caching Service Worker
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register(baseUrl + 'service-worker.js');
-        });
+       
+		
+		window.addEventListener('load', function() {
+		
+           navigator.serviceWorker.register(baseUrl + 'service-worker.js').then(function(reg) {
+    // updatefound is fired if service-worker.js changes.
+    reg.onupdatefound = function() {
+      var installingWorker = reg.installing;
+
+      installingWorker.onstatechange = function() {
+	  console.log(installingWorker.state);
+        switch (installingWorker.state) {
+          case 'installed':
+            if (navigator.serviceWorker.controller) {
+              // At this point, the old content will have been purged and the fresh content will
+              // have been added to the cache.
+              // It's the perfect time to display a "New content is available; please refresh."
+              // message in the page's interface.
+              console.log('New or updated content is available.');
+			  showToast("There's a new update! Click on the 'Update App' option for reloading.",10000);
+            } else {
+              // At this point, everything has been precached.
+              // It's the perfect time to display a "Content is cached for offline use." message.
+              console.log('Content is now available offline!');
+            }
+            break;
+
+          case 'redundant':
+            console.error('The installing service worker became redundant.');
+            break;
+			
+        }
+      };
+    };
+  }).catch(function(e) {
+    console.error('Error during service worker registration:', e);
+  });
+      });
       }
     </script>
 
@@ -73,6 +108,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	<link rel="import" href="src/my-unit.html">
 	
 	
+	<script src="scripts/clipboard.min.js"></script>
 	<script src="scripts/app.js"></script>
 
     <!-- Add any global styles for body, document, etc. -->
@@ -82,8 +118,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         font-family: 'Roboto', 'Noto', sans-serif;
         line-height: 1.5;
         min-height: 100vh;
-        background-color: #eeeeee;
-      }
+		/*background: url("https://s-media-cache-ak0.pinimg.com/originals/a9/e2/50/a9e2503b55b704870619bfd93a3153e0.jpg");*/
+		background-color: #eeeeee;
+      
+	  }
     </style>
   </head>
   <body>

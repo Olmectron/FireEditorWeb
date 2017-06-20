@@ -118,16 +118,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
          
          
          }
-         if(unit.child && unit.hairColorEditable){
+		 var hairColorStart=block.indexOf(Hex.F_BLOCK_STARTER)+96;
+        // if(unit.child && unit.hairColorEditable){
 					
-					var start=block.indexOf(Hex.F_BLOCK_STARTER)+96;
+		//			var start=block.indexOf(Hex.F_BLOCK_STARTER)+96;
 						
 						
 						
-				                        var hairColorString=block.substring(start,start+6);
+				                        var hairColorString=block.substring(hairColorStart,hairColorStart+6);
 					this.set("blockData.unitHairColor","#"+hairColorString);
 			                                                
-         }
+         //}
          if(unit.avatar || !unit.nameEditable){
             var blockLeft=block.substring(52);
             var startAliveHex=blockLeft.indexOf("FFFF")-(8);

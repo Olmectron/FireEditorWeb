@@ -250,7 +250,7 @@ function processUnits(full){
 				afterTINUPos=start/2;
        
                 var end=full.indexOf(Hex.CHARACTERS_FOOTER);
-                console.log("START "+start+", END "+end);
+//                console.log("START "+start+", END "+end);
                 var bloque=full.substring(start,end);
                 var counter=parseInt("0x"+bloque.substring(4, 6));
 				unitCounter=counter;
@@ -476,3 +476,69 @@ function processUnits(full){
 	var R={imagesPath:"./res/images"};
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	function showToast(t, d, wideLayout,dialog,buttonText,buttonColor){
+    newToast(t, d, wideLayout,dialog,buttonText,buttonColor).open();
+}
+function newToast(t, d, wideLayout,dialog,buttonText,buttonColor) {
+
+var toast = document.createElement("paper-toast");
+
+toast.text = t;
+
+if(buttonText){
+  var but=document.createElement("paper-button");
+  but.style.cssText ="text-tarnsform:none; color: "+(buttonColor || "#2196F3")+";"
+
+  but.innerHTML=buttonText;
+  toast.appendChild(but);
+}
+    if(d!=null)
+        toast.duration=d;
+    if(wideLayout){
+    toast.style="width: 100%;"+
+        "min-width: 0;"+
+        "border-radius: 0;"+
+		"padding-top: 12px;"+
+        "margin: 0;";
+    }
+    else{
+        toast.style="";
+    }
+
+            toast.addEventListener("iron-overlay-closed",function(){
+              if(dialog)
+              dialog.removeChild(toast);
+              else
+                document.body.removeChild(toast);
+                //console.log("Child removed");
+            });
+//dynamicEl.cities = this.officesCities;
+if(dialog)
+dialog.appendChild(toast);
+else
+document.body.appendChild(toast);
+
+            return toast;
+}
+	
+	
+	
+	var hexDigits = new Array
+        ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); 
+
+//Function to convert rgb color to hex format
+function rgb2hex(rgb) {
+ rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+ return "#" + hexVal(rgb[1]) + hexVal(rgb[2]) + hexVal(rgb[3]);
+}
+
+function hexVal(x) {
+  return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
+ }

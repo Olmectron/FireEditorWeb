@@ -17,7 +17,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="unit-item.html">
 
 
-<dom-module id="my-view1">
+<dom-module id="my-units">
   <template>
     <style include="shared-styles iron-flex iron-flex-alignment">
       :host {
@@ -36,8 +36,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
 
   <script>
-    class MyView1 extends Polymer.Element {
-      static get is() { return 'my-view1'; }
+    class MyUnits extends Polymer.Element {
+      static get is() { return 'my-units'; }
 	  ready(){
 		super.ready();
 		
@@ -61,6 +61,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		}
     }
 
-    window.customElements.define(MyView1.is, MyView1);
+    window.customElements.define(MyUnits.is, MyUnits);
   </script>
 </dom-module>
