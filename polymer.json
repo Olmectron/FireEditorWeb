@@ -16,6 +16,7 @@
   "extraDependencies": [
     "manifest.json",
     "bower_components/webcomponentsjs/*.js",
+	"bower_components/pouchdb/dist/pouchdb.min.js",
 	"scripts/*.js",
 	"scripts/*.css",
 	"res/images/units/**/*",

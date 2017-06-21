@@ -134,6 +134,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             reflectToAttribute: true,
             observer: '_pageChanged',
           },
+		  pouchRev: String,
           rootPattern: String,
           routeData: Object,
           subroute: String,
@@ -201,16 +202,39 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			var reader = new FileReader();
 			var t=this;
 			  reader.onload = function(progressEvent){
+				t.saveStringToPouch(this.result);
 				t.set("bodyHex",decompressArray(this.result.slice(0XD0)));
 			  };
 			  reader.readAsArrayBuffer(chapter);
 		
 		}
+		readDirectlyFromArray(array){
+			this.set("bodyHex",decompressArray(array.slice(0xD0)));
+		}
 		
+		saveStringToPouch(array){
+		
+		
+						var db = new PouchDB('chapters');
+						var doc = {
+						  "_id": "file",
+						  "data":array
+						};
+						if(this.pouchRev){
+							doc._rev=this.pouchRev;
+						}
+						var t=this;
+						db.put(doc).then(function(e){
+							t.set("pouchRev",e.rev);
+//							console.log(e);
+						});
+
+		}
 		
 		chapterFileChanged(chapter){
 			if(chapter){
 				this.set("units",[]);
+				//this.setPouchDBFile(chapter);
 				this.readChapterFile(chapter);
 			}
 		
@@ -219,8 +243,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		}
 		_handleFile(e){
 			if(this.$.chapterInput.files[0]){
-			
+				
 				this.set("chapterFile",this.$.chapterInput.files[0]);
+				
+				
 			
 			}
 			else{ 
@@ -244,8 +270,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         ];
       }
 
+		readPouchFile(){
+		
+						var t=this;
+						var db = new PouchDB('chapters');
+						db.get('file').then(function (doc) {
+							t.set("pouchRev",doc._rev);
+							t.readDirectlyFromArray(doc.data);
+//						  console.log("pouch",doc);
+						});
+		}
       constructor() {
         super();
+		
+		this.readPouchFile();
+		
 		this.readUnitsXML();
         // Get root pattern for app-route, for more info about `rootPath` see:
         // https://www.polymer-project.org/2.0/docs/upgrade#urls-in-templates

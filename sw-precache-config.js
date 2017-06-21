@@ -15,6 +15,8 @@ module.exports = {
     '/index.html',
     '/manifest.json',
     '/bower_components/webcomponentsjs/*',
+	
+	"/bower_components/pouchdb/dist/pouchdb.min.js",
 	"/scripts/*",
 	
 	"/res/values/strings/*",
