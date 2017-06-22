@@ -89,6 +89,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <a name="units" href="units">Units</a>
           <!--<a name="view2" href="view2">Settings</a>-->
 		  
+          <a name="update" on-click="downloadDecompressed" hidden$="[[!fullHex]]">Download decompressed</a>
+		  
+		  
           <a name="update" on-click="forceUpdate">Update App</a>
           
         </iron-selector>
@@ -103,6 +106,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <div main-title>Fire Editor</div>
 			<input type="file" id="chapterInput" on-change="_handleFile" style="display:none;"/>
 			<paper-icon-button icon="folder-open" on-click="clickChapterInput"></paper-icon-button>
+			<paper-icon-button icon="save" on-click="downloadCompressed"></paper-icon-button>
 			
 			
           </app-toolbar>
@@ -113,7 +117,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             attr-for-selected="name"
             fallback-selection="view404"
             role="main">
-          <my-units name="units" units="[[units]]"></my-units>
+          <my-units name="units" units="{{units}}" units-block="{{unitsCopy}}"></my-units>
           <my-view2 name="view2"></my-view2>
 		  
           <my-view404 name="view404"></my-view404>
@@ -126,7 +130,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     class MyApp extends Polymer.Element {
 
       static get is() { return 'my-app'; }
+_fileNameChanged(val){
+//	console.log(val);
 
+}
+unitsCopyChanged(copy){
+console.log("Copy block set");
+
+}
       static get properties() {
         return {
           page: {
@@ -134,7 +145,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             reflectToAttribute: true,
             observer: '_pageChanged',
           },
+		  fileName:{
+			type:String,
+			notify:true,
+			observer: "_fileNameChanged"
+		  },
 		  pouchRev: String,
+		  nameRev: String,
+		  
           rootPattern: String,
           routeData: Object,
           subroute: String,
@@ -143,10 +161,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			notify:true,
 			observer: "chapterFileChanged"
 		  },
-		  bodyHex:{
+		  fullHex:{
 			type:String,
 			notify:true,
-			observer: "bodyHexChanged"
+			observer: "fullHexChanged"
+		  },
+		  unitsCopy:{
+			type:String,
+			notify:true,
+			observer: "unitsCopyChanged"
 		  },
 		  unitsHex:{
 			type:String,
@@ -184,32 +207,66 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		//}
 		
 	  }
+	  downloadDecompressed(){
+	  downloadDecompressedChapter(this.fileName);
+	  
+	  }
+	  downloadCompressed(){
+		//downloadDecompressedChapter("DecompressedChapter");
+		var stringBeforeUnits=window.ACTUAL_DECOMPRESSED_ARRAY.substring(0,
+		window.ACTUAL_DECOMPRESSED_ARRAY.indexOf(Hex.CHARACTERS_HEADER)+Hex.CHARACTERS_HEADER.length+6
+		
+		);
+		var unitsString="";
+		
+		for(var i=0;i<this.units.length;i++){
+		unitsString=unitsString+this.units[i].hexBlock;
+		}
+		
+		var stringAfterUnits=window.ACTUAL_DECOMPRESSED_ARRAY.substring(
+		window.ACTUAL_DECOMPRESSED_ARRAY.indexOf(Hex.CHARACTERS_FOOTER)
+		
+		);
+		var total=stringBeforeUnits+unitsString+stringAfterUnits;
+		window.ACTUAL_DECOMPRESSED_ARRAY=total;
+		
+		
+		compressArray(window.ACTUAL_DECOMPRESSED_ARRAY,this.fileName);
+		
+		this.saveStringToPouch(total);
+	  }
 	  EmblemUnitsObserver(val){
 		//console.log(val);
 	  
 	  }
-		bodyHexChanged(full){
-			this.set("unitsHex",processUnits(full));
+		fullHexChanged(full){
+			window.ACTUAL_DECOMPRESSED_ARRAY=full;
+			this.set("unitsHex",processUnits(full.substring(0xD0*2)));
 		}
 		unitsHexChanged(unitsBlock){
 			var positions=getUnitsPositions(unitsBlock);
 			var	blocks=getUnitsHexBlocks(unitsBlock,positions);
 			this.set("positionsArray",positions);
 			this.set("blocksArray",blocks);
+			this.set("unitsCopy",unitsBlock);
 			}
+			
 		
 		readChapterFile(chapter){
 			var reader = new FileReader();
 			var t=this;
 			  reader.onload = function(progressEvent){
-				t.saveStringToPouch(this.result);
-				t.set("bodyHex",decompressArray(this.result.slice(0XD0)));
+				//t.saveStringToPouch(this.result);
+				var desc=decompressArray(this.result);
+				t.set("fullHex",desc);
+				t.saveStringToPouch(desc);
+			
 			  };
 			  reader.readAsArrayBuffer(chapter);
 		
 		}
 		readDirectlyFromArray(array){
-			this.set("bodyHex",decompressArray(array.slice(0xD0)));
+			this.set("fullHex",(array));
 		}
 		
 		saveStringToPouch(array){
@@ -243,7 +300,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		}
 		_handleFile(e){
 			if(this.$.chapterInput.files[0]){
+				//console.log(this.$.chapterInput.files[0]);
 				
+						var db = new PouchDB('chapters');
+				var doc = {
+						  "_id": "fileName",
+						  "data":this.$.chapterInput.files[0].name
+						};
+						
+						if(this.nameRev){
+							doc._rev=this.nameRev;
+						}
+						var t=this;
+						db.put(doc).then(function(e){
+							t.set("nameRev",e.rev);
+							t.set("fileName",doc.data);
+//							console.log(e);
+						});
+						
+						
 				this.set("chapterFile",this.$.chapterInput.files[0]);
 				
 				
@@ -277,6 +352,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 						db.get('file').then(function (doc) {
 							t.set("pouchRev",doc._rev);
 							t.readDirectlyFromArray(doc.data);
+//						  console.log("pouch",doc);
+						});
+						
+						db.get('fileName').then(function (doc) {
+							t.set("nameRev",doc._rev);
+							t.set("fileName",doc.data);
 //						  console.log("pouch",doc);
 						});
 		}

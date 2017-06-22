@@ -116,10 +116,718 @@ function modulo(a, b) {
         x = Number(x);
         return x < 0 ? Math.ceil(x) : Math.floor(x);
     }
+	//HuffmanNode
+	var tree=[];
+        var codetree=[];
+			var codemask=[];
+        //HuffmanCode
+		var codes=[];
+        var max_symbols = 0x100;
+        var num_leafs, num_nodes;
+        var freqs=[];
+        var num_bits;	
 	
-function decompressArray(s){
+		function stringToByteArray(string){
+			var arr=[];
+			var counter=0;
+			for(var i=0;i<string.length;i+=2){
+				arr[counter]=parseInt("0x"+string.substring(i,i+2));
+				counter++;
+			}
+			return arr;
+			
+		}
+  function compressArray(sggtring,fileName){
+		var nac=stringToByteArray(sggtring);
+	//	console.log(nac);
+	   var startJava=copyOf(nac, 0xC0);
+            var headerJava=getCompressedHeader(nac, nac.length - 0xC0);
+            var n=nac.slice(0xC0);
+			
+//            console.log("data length "+n.length);
+            var data=[];
+            for(var i=0;i<n.length;i++){
+                if(n[i]<0){
+                    data[i]=(n[i] & 0xFF);
+                }
+                else{
+                    data[i]=n[i];
+                }
+            }
+            var pk4_pos = 0;
+            num_bits = 8;
+            var raw_len =data.length;
+
+            var pbuf = [];
+            //byte[] aux=Arrays.copyOf(DataView.getBytes(((CMD_CODE) | (raw_len << 8))),4);
+        //System.arraycopy(cc,0, pbuf, 0, 4);
+		/*var by=toBytes(((CMD_CODE) | (raw_len << 8)));
+		
+		
+				for(var i=0;i<4;i++){
+					pbuf[i]=by[i];
+					
+				}*/
+				copyArray(toBytes(((CMD_CODE) | (raw_len << 8))),0,pbuf,0,4);
+				
+					
+				
+            //Array.Copy(BitConverter.GetBytes((CMD_CODE) | (raw_len << 8)), pbuf, 4);
+            var pak_pos = 4;
+            var raw_pos = 0;
+            HUF_InitFreqs();
+            
+            HUF_CreateFreqs(data, data.length);
+
+            HUF_InitTree();
+            HUF_CreateTree();
+
+            HUF_InitCodeTree();
+            HUF_CreateCodeTree();
+            /*int[] aux=byteToInt(codetree);
+            System.out.println("aux-----");
+            
+            for(int i=0;i<aux.length;i++){
+                System.out.println(aux[i]+"");
+            }
+            System.out.println("-----aux");
+            */
+            HUF_InitCodeWorks();
+            HUF_CreateCodeWorks();
+
+            var cod_pos = 0;
+            var clen=codetree[cod_pos];
+           if(clen<0){
+               clen=clen & 0xff;
+           }
+            var len = ((clen+1) << 1);
+           
+            //System.out.println("LEN "+len);
+            while (len-- != 0) 
+                pbuf[pak_pos++] = 
+                        codetree[cod_pos++];
+            var mask4 = 0;
+            while (raw_pos < data.length)
+            {
+              
+                var ch = data[raw_pos++];
+                if(ch<0){
+                    ch=ch & 0xff;
+                }
+                //System.out.println(raw_pos+"/"+data.length);
+
+                var nbits;
+                for (nbits = 8; nbits != 0; nbits -= num_bits)
+                {
+                    //HuffmanCode THIS IS
+					code = codes[ch & ((1 << num_bits) - 1)];
+                    ////  code = codes[ch >> (8 - num_bits)];
+
+                    len = code.nbits;
+                    //System.out.println(len+" lenas 1");
+                    
+                    //if(len<0){
+                    //    len=len & 0xFF;
+                    //}
+                    //System.out.println(len+" lenas 2");
+                    
+                    var cwork = 0;
+
+                    //byte mask = HUF_MASK;
+                    var mask = Math.abs(HUF_MASK);
+                    while (len-- != 0)
+                    {
+                        if ((mask4 >>>= Math.abs(HUF_SHIFT)) == 0)
+                        {
+                            mask4 = Math.abs(HUF_MASK4);
+                            pk4_pos = pak_pos;
+                            copyArray(toBytes(0), 0, pbuf,pk4_pos, 4);
+                            //Array.Copy(BitConverter.GetBytes(0), 0, pbuf, pk4_pos, 4);
+                            pak_pos += 4;
+                        }
+                        var codeworkInt=code.codework[cwork];
+                        if(codeworkInt<0){
+                            codeworkInt=codeworkInt & 0xff;
+                        }
+                        if((codeworkInt & mask) > 255){
+                           console.log("Greater than -- "+(codeworkInt & mask));
+						   
+                        }
+                        if ((codeworkInt & mask) != 0) 
+							
+                            copyArray(toBytes((toUint32(pbuf,pk4_pos) | mask4)),0,pbuf,pk4_pos,4);
+                            //Array.Copy(BitConverter.GetBytes(BitConverter.ToUInt32(pbuf, pk4_pos) | mask4), 0, pbuf, pk4_pos, 4);
+                        if ((mask >>>= Math.abs(HUF_SHIFT)) == 0)
+                        {
+                            mask = Math.abs(HUF_MASK);
+                            cwork++;
+                        }
+                    }
+
+                    ch >>>= num_bits;
+                    ////  ch = (ch << num_bits) & 0xFF;
+                }
+            }
+            var pak_len = (pak_pos);
+//            console.log("Done");
+			
+			var ended=copyOf(pbuf,pak_len);
+			
+			var fullCompressed=startJava.concat(headerJava).concat(ended);
+			ACTUAL_COMPRESSED_ARRAY=fullCompressed;
+			if(fileName){
+				
+			downloadCompressedChapter("Compressed_"+fileName+"_"+new Date().getTime());
+				
+			}
+			else{
+				
+				downloadCompressedChapter("Compressed_Chapter_"+new Date().getTime());
+			
+				
+			}
+			var hexBig="";
+for(var i=0;i<ended.length;i++){
+	var hex=ended[i].toString(16);
+	if(hex.length==1){
+		hex="0"+hex;
+	}
+	hexBig=hexBig+hex;
+}
+
+//processUnits(hexBig.toUpperCase());
+
+	return ended;
+            //return ;//copyOf(pbuf,(pak_len));
+        }
+		function copyOf(arr,length){
+			var nuevo=[];
+			for(var i=0;i<length;i++){
+				if(typeof(arr[i])!="undefined" && arr[i]!=null){
+					
+					nuevo[i]=arr[i];
+					
+				}
+				else nuevo[i]=0;
+				
+				
+			}
+			return nuevo;
+			
+		}
+		function copyArray(arrStart,offsetStart,arrDest,offsetDest,copyLength){
+		//var by=toBytes(((CMD_CODE) | (raw_len << 8)));
+		
+		
+				for(var i=0;i<copyLength;i++){
+					arrDest[i+offsetDest]=arrStart[i+offsetStart];
+					
+				}
+		}
+		
+		function toBytes(num) {
+   var arr = new ArrayBuffer(4); // an Int32 takes 4 bytes
+    var view = new DataView(arr);
+    view.setUint32(0, num, false);
+
+
+	// byteOffset = 0; litteEndian = false
+    return Array.from(new Uint8Array(arr)).reverse();
+}
+function toUint32(arreglo,offset){
+	 var value = byteAsULong(arreglo[0+offset]) | (byteAsULong(arreglo[1+offset]) << 8) | (byteAsULong(arreglo[2+offset]) << 16) | (byteAsULong(arreglo[3+offset]) << 24);
+    //System.out.println("arreglo 0 "+ byteAsULong(arreglo[0+offset]));
+    //System.out.println("arreglo 1 "+ byteAsULong(arreglo[1+offset]));
+    //System.out.println("arreglo 2 "+ byteAsULong(arreglo[2+offset]));
+    //System.out.println("arreglo 3 "+ byteAsULong(arreglo[3+offset]));
+    
+    return value;
+}
+function byteAsULong(b) {
+            return (b) & (0x00000000000000FF); 
+        }
+function toUint16(arreglo,offset){
+	
+var value = byteAsULong(arreglo[0+offset]) | (byteAsULong(arreglo[1+offset]) << 8);
+   
+    
+    return value;
+}
+       function HUF_InitFreqs()
+        {
+            
+
+            freqs = [];
+
+            for (var i = 0; i < max_symbols; i++) freqs[i] = 0;
+			
+//			console.log(freqs);
+        }
+        
+        function HUF_CreateFreqs(raw_buffer, raw_len)
+        {
+            //uint i;
+		/*	var str="";
+			console.log(raw_buffer.length);
+			for(var i=0;i<raw_buffer.length;i++){
+				
+				str=str+raw_buffer[i]+",";
+				
+			}*/
+			
+			
+			//console.log("Raw buffer: ",str);
+
+            for (var i = 0; i < raw_len; i++)
+            {
+                var ch = raw_buffer[i];
+                if(ch<0){
+                    ch=ch & 0xFF;
+                }
+                                   // System.out.println(ch+" ch");
+                var nbits;
+                for (nbits = 8; nbits != 0; nbits -= num_bits)
+                {
+                    var val=(ch >>>(8 - num_bits));
+                    //val=Math.abs(val);
+                    //System.out.println(val);
+                    freqs[val]++;
+                    ch = (ch << num_bits) & 0xFF;
+                    //ch=Math.abs(ch);
+                }
+            }
+
+            num_leafs = 0;
+            for (var i = 0; i < max_symbols; i++) if (freqs[i] != 0) num_leafs++;
+            if (num_leafs < 2)
+            {
+                if (num_leafs == 1)
+                {
+                    for (var i = 0; i < max_symbols; i++)
+                    {
+                        if (freqs[i] != 0)
+                        {
+                            freqs[i] = 1;
+                            break;
+                        }
+                    }
+                }
+                while (num_leafs++ < 2)
+                {
+                    for (var i = 0; i < max_symbols; i++)
+                    {
+                        if (freqs[i] == 0)
+                        {
+                            freqs[i] = 2;
+                            break;
+                        }
+                    }
+                }
+            }
+            num_nodes = (num_leafs << 1) - 1;
+        }
+		function HuffmanNode(){
+			this.symbol=null;
+            this.weight=null;
+            this.leafs=null;
+
+            this.dad=null;
+            this.lson=null;
+            this.rson=null;
+			
+			
+		}
+		function HuffmanCode()
+        {
+            this.nbits=null;
+            this.codework=null;
+        }
+        function HUF_InitTree()
+        {
+            tree = [];
+            var i;
+            for (i = 0; i < num_nodes; i++) tree[i] = null;
+        }
+        function HUF_CreateTree()
+        {
+            
+
+            var num_node = 0;
+            for (var i = 0; i < max_symbols; i++)
+            {
+                if (freqs[i] != 0)
+                {
+                    var node = new HuffmanNode();
+                    
+
+                    node.symbol = i;
+                    node.weight = freqs[i];
+                    node.leafs = 1;
+                    node.dad = null;
+                    node.lson = null;
+                    node.rson = null;
+					tree[num_node++] = node;
+					
+                }
+            }
+
+//console.log("NUMNODE",num_node,"NODES",num_nodes);
+            while (num_node < num_nodes)
+            {
+                var rnode;
+                var lnode = rnode = null;
+                var rweight;
+                var lweight = rweight = 0;
+
+                for (var i = 0; i < num_node; i++)
+                {
+//					console.log(tree[i]);
+                    if (tree[i].dad == null)
+                    {
+                        if (lweight == 0 || (tree[i].weight < lweight))
+                        {
+                            rweight = lweight;
+                            rnode = lnode;
+                            lweight = tree[i].weight;
+                            lnode = tree[i];
+                        }
+                        else if (rweight == 0 || (tree[i].weight < rweight))
+                        {
+                            rweight = tree[i].weight;
+                            rnode = tree[i];
+                        }
+                    }
+                }
+
+                var node = new HuffmanNode();
+                tree[num_node++] = node;
+
+                node.symbol = num_node - num_leafs + max_symbols;
+                
+				
+				node.weight = lnode.weight + rnode.weight;
+                
+				
+				node.leafs = lnode.leafs + rnode.leafs;
+				
+				
+                node.dad = null;
+                node.lson = lnode;
+                node.rson = rnode;
+
+                lnode.dad = rnode.dad = node;
+            }
+        }
+        function HUF_InitCodeTree()
+        {
+            
+
+            var max_nodes = (((num_leafs - 1) | 1) + 1) << 1;
+
+            codetree =[];// new byte[max_nodes];
+            codemask =[]; //new byte[max_nodes];
+
+            for (var i = 0; i < max_nodes; i++)
+            {
+                codetree[i] = 0;
+                codemask[i] = 0;
+            }
+        }
+        function HUF_CreateCodeTree()
+        {
+            var i = 0;
+
+            codetree[i] = ((num_leafs - 1) | 1);
+           
+            //System.out.println(codetree[i]+" num leafs");
+            codemask[i] = 0;
+
+            HUF_CreateCodeBranch(tree[num_nodes - 1], i + 1, i + 2);
+            HUF_UpdateCodeTree();
+            var what=codetree[0];
+            if(what<0){
+                what=what&0xff;
+            }
+            
+//            console.log("What "+what);
+            
+            var c=((what + 1) << 1);
+            //if(c<0){
+            //    c=c & 0xFF;
+            //}
+            i = c;
+            //System.out.println("codetree "+i);
+            var auxmask=byteToInt(codemask);
+            var auxtree=byteToInt(codetree);
+            
+            while (--i != 0){
+                if (auxmask[i] != 0xFF) {
+                    auxtree[i] |= auxmask[i];
+                
+                }
+            }
+            codetree=intToByte(auxtree);
+        }
+        function HUF_CreateCodeBranch(root, p, q)
+        {
+            var stack = [];
+            var mask;
+
+            if (root.leafs <= HUF_NEXT + 1)
+            {
+                var r;
+                var s = r = 0;
+                stack[r++] = root;
+
+                while (s < r)
+                {
+                    var node;
+                    if ((node = stack[s++]).leafs == 1)
+                    {
+                        if (s == 1) { codetree[p] = node.symbol; codemask[p] = 0xFF; }
+                        else { codetree[q] = node.symbol; codemask[q++] = 0xFF; }
+                    }
+                    else
+                    {
+                        mask = 0;
+                        if (node.lson.leafs == 1) mask |= HUF_LCHAR;
+                        if (node.rson.leafs == 1) mask |= HUF_RCHAR;
+
+                        if (s == 1) { codetree[p] = ((r - s) >>> 1); codemask[p] = mask; }
+                        else { codetree[q] = ((r - s) >>> 1); codemask[q++] = mask; }
+
+                        stack[r++] = node.lson;
+                        stack[r++] = node.rson;
+                    }
+                }
+            }
+            else
+            {
+                mask = 0;
+                if (root.lson.leafs == 1) mask |= HUF_LCHAR;
+                if (root.rson.leafs == 1) mask |= HUF_RCHAR;
+
+                codetree[p] = 0; codemask[p] = mask;
+
+                if (root.lson.leafs <= root.rson.leafs)
+                {
+                    var l_leafs = HUF_CreateCodeBranch(root.lson, q, q + 2);
+                    var r_leafs = HUF_CreateCodeBranch(root.rson, q + 1, q + (l_leafs << 1));
+                    codetree[q + 1] = (l_leafs - 1);
+                }
+                else
+                {
+                    var r_leafs = HUF_CreateCodeBranch(root.rson, q + 1, q + 2);
+                    var l_leafs = HUF_CreateCodeBranch(root.lson, q, q + (r_leafs << 1));
+                    codetree[q] = (r_leafs - 1);
+                }
+            }
+
+            return (root.leafs);
+        }
+        function intToByte(n){
+            var arreglo=[];
+            for(var i=0;i<n.length;i++){
+                
+                arreglo[i]=n[i]; 
+            }
+            return arreglo;
+        }
+        function byteToInt(n){
+            var arreglo=[];
+            for(var i=0;i<n.length;i++){
+                var c=n[i];
+                if(c<0){
+                    c = c & 0xff;
+                }
+                arreglo[i]=c; 
+            }
+            return arreglo;
+        }
+        function HUF_UpdateCodeTree()
+        {
+            var i;
+            
+            //int what=codetree[0];
+            //if(what<0){
+            //    what=what &0xff;
+            //}
+            
+            
+            var auxtree=byteToInt(codetree);
+            var auxmask=byteToInt(codemask);
+            var max = ((auxtree[0] + 1) << 1);
+            
+            for (i = 1; i < max; i++)
+            {
+                
+                if ((auxmask[i] != 0xFF) && (auxtree[i] > HUF_NEXT))
+                {
+                    var inc;
+                    if ((i & 1) != 0 && (auxtree[i - 1] == HUF_NEXT))
+                    {
+                        i--;
+                        inc = 1;
+                    }
+                    else if ((i & 1) == 0 && (auxtree[i + 1] == HUF_NEXT))
+                    {
+                        i++;
+                        inc = 1;
+                    }
+                    else
+                    {
+                        inc = auxtree[i] - Math.abs(HUF_NEXT);
+                    }
+                    //if(codetree[i]<0){
+                    //    System.out.println("negative codetree "+codetree[i]);
+                    //    codetree[i]=(codetree[i] & 0xFF);
+                    //}
+                    var n1 = (i >>> 1) + 1 + auxtree[i];
+                    var n0 = n1 - inc;
+
+                    var l1 = n1 << 1;
+                    var l0 = n0 << 1;
+                    codetree=intToByte(auxtree);
+                    codemask=intToByte(auxmask);
+                    
+                    var tmp0 = toUint16(codetree,l1);
+                    var tmp1 = toUint16(codemask,l1);
+                    var j;
+                    for (j = l1; j > l0; j -= 2)
+                    {
+                        copyArray(toBytes((toUint16(codetree,j - 2))),0,codetree,j, 2);
+                        copyArray(toBytes((toUint16(codemask,j - 2))),0,codemask,j, 2);
+                        
+                        //Array.Copy(BitConverter.GetBytes(BitConverter.ToUInt16(codetree, j - 2)), 0, codetree, j, 2);
+                        //Array.Copy(BitConverter.GetBytes(BitConverter.ToUInt16(codemask, j - 2)), 0, codemask, j, 2);
+                    }
+                    copyArray(toBytes(tmp0), 0, codetree, l0, 2);
+                    copyArray(toBytes(tmp1), 0, codemask, l0, 2);
+                    
+                    //Array.Copy(BitConverter.GetBytes(tmp0), 0, codetree, l0, 2);
+                    //Array.Copy(BitConverter.GetBytes(tmp1), 0, codemask, l0, 2);
+                    auxtree=byteToInt(codetree);
+                    auxmask=byteToInt(codemask);
+                    
+                    auxtree[i] -= inc;
+
+                    var k;
+                    for (j = i + 1; j < l0; j++)
+                    {
+                        if (auxmask[j] != 0xFF)
+                        {
+                            k = (j >>> 1) + 1 + auxtree[j];
+                            if ((k >= n0) && (k < n1)) auxtree[j]++;
+                        }
+                    }
+
+                    if ((auxmask[l0 + 0] )!= 0xFF)
+                        auxtree[l0 + 0] +=inc;
+                    if (auxmask[l0 + 1] != 0xFF)
+                        auxtree[l0 + 1] += inc;
+
+                    for (j = l0 + 2; j < l1 + 2; j++)
+                    {
+                        if (auxmask[j] != 0xFF)
+                        {
+                            k = (j >>> 1) + 1 + auxtree[j];
+                            if (k > n1) auxtree[j]--;
+                        }
+                    }
+                    codetree=intToByte(auxtree);
+                    codemask=intToByte(auxmask);
+                    
+                    i = (i | 1) - 2;
+                }
+            }
+            codetree=intToByte(auxtree);
+                    codemask=intToByte(auxmask);
+            
+        }
+        function  HUF_InitCodeWorks()
+        {
+            var i;
+            codes = [];
+            for (i = 0; i < max_symbols; i++) codes[i] = null;
+			
+			
+        }
+        function HUF_CreateCodeWorks()
+        {
+            var scode = []
+            var i;
+
+            for (i = 0; i < num_leafs; i++)
+            {
+                var node = tree[i];
+                var symbol = node.symbol;
+
+                var nbits = 0;
+                while (node.dad != null)
+                {
+                    scode[nbits++] = node.dad.lson == node ? HUF_LNODE : HUF_RNODE;
+                    node = node.dad;
+                }
+                var maxbytes = (nbits + 7) >>> 3;
+
+                var code = new HuffmanCode();
+
+                codes[symbol] = code;
+                code.nbits = nbits;
+                code.codework = [];
+
+                var j;
+                for (j = 0; j < maxbytes; j++) code.codework[j] = 0;
+var mask = Math.abs(HUF_MASK);
+                //byte mask = HUF_MASK;
+                j = 0;
+                var nbit;
+                for (nbit = nbits; nbit != 0; nbit--)
+                {
+                    if (scode[nbit - 1] != 0) code.codework[j] |= mask;
+                    if ((mask >>>= HUF_SHIFT) == 0)
+                    {
+                        mask = Math.abs(HUF_MASK);
+                        j++;
+                    }
+                }
+            }
+        }
+        
+        
+        
+
+        
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	window.ACTUAL_DECOMPRESSED_ARRAY=[];
+	
+	
+	
+function decompressArray(res){
+	
+	var heador=copyOf(Array.from(new Uint8Array(res)),0XC0);
+//	console.log(heador);
+	var s=res.slice(0XD0)
 	    
 		
     /*var byteArray=getByteArrayFromString(s);
@@ -131,7 +839,11 @@ function decompressArray(s){
 	///console.log(s.byteLength+" byte length");
 var u = new Uint8Array(s);
 
+var cccccc=Array.from(u);
+
+//	console.log("Before decompressing",cccccc);
 	var dv = new DataView(s, 0);
+
 	var x=dv.getUint32(0,true);
 	
 var header=x;
@@ -218,9 +930,14 @@ var num_bits = header & 0xF;
 			
 			
 var array = Array.from(Uncompressed);
+
+var fullArray=heador.concat(array);
+window.ACTUAL_DECOMPRESSED_ARRAY=fullArray;
+
+//console.log("After compressing",compressArray(array));
 var hexBig="";
-for(var i=0;i<array.length;i++){
-	var hex=array[i].toString(16);
+for(var i=0;i<fullArray.length;i++){
+	var hex=fullArray[i].toString(16);
 	if(hex.length==1){
 		hex="0"+hex;
 	}
@@ -232,6 +949,43 @@ for(var i=0;i<array.length;i++){
 	return hexBig.toUpperCase();
 	
 
+}
+
+var ACTUAL_COMPRESSED_ARRAY=[];
+
+function downloadCompressedChapter(reportName) {
+	var ut=new Uint8Array(ACTUAL_COMPRESSED_ARRAY);
+	
+    var blob = new Blob([ut],{type:"application/octect-stream"});
+    var link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    var fileName = reportName;
+    link.download = fileName;
+    link.click();
+}
+function downloadDecompressedChapter(reportName) {
+	var arrr=stringToByteArray(window.ACTUAL_DECOMPRESSED_ARRAY);
+	var ut=new Uint8Array(arrr);
+	
+    var blob = new Blob([ut],{type:"application/octect-stream"});
+    var link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    
+	
+	var fileName = "";
+if(reportName){
+	fileName="Decompressed_"+reportName+"_"+new Date().getTime();
+	
+}	
+else{
+	fileName="Decompressed_Chapter_"+new Date().getTime();
+	
+	
+}
+	
+	
+    link.download = fileName;
+    link.click();
 }
 
 var Hex={CHARACTERS_HEADER:"54494E55",CHARACTERS_FOOTER:"FF49464552",
@@ -542,3 +1296,49 @@ function rgb2hex(rgb) {
 function hexVal(x) {
   return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
  }
+ 
+ 
+ 
+ 
+function getCompressedHeader(decmp,length){
+            var Header = [];
+            
+            copyArray([0x50,0x4D,0x4F,0x43],0, Header,0, 0x4);
+            
+            copyArray(toBytes(2),0, Header,0x4, 0x4);
+            copyArray(toBytes(length),0, Header,0x8, 0x4);
+			
+//			console.log(decmp);
+			var str=String.fromCharCode.apply(null, decmp);
+            var checkSumBytes=toBytes(getCRC32(str));
+            copyArray(checkSumBytes,0, Header,0xC, 0x4);
+            //for(int i=0;i<checkSumBytes.length;i++){
+            //    System.out.println("checksum "+checkSumBytes[i]);
+            //}
+           // CRC32 of Decompressed Data.
+            return Header;
+        }
+		
+function makeCRCTable(){
+    var c;
+    var crcTable = [];
+    for(var n =0; n < 256; n++){
+        c = n;
+        for(var k =0; k < 8; k++){
+            c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+        }
+        crcTable[n] = c;
+    }
+    return crcTable;
+}
+
+function getCRC32(str) {
+    var crcTable = window.crcTable || (window.crcTable = makeCRCTable());
+    var crc = 0 ^ (-1);
+
+    for (var i = 0; i < str.length; i++ ) {
+        crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+    }
+
+    return (crc ^ (-1)) >>> 0;
+}

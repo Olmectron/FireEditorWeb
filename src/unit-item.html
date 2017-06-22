@@ -106,6 +106,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			type:Object,
 			notify:true,
 			reflectToAttribute: true
+		  },
+		  fullBlock:{
+			type:String,
+			notify:true,
+			reflectToAttribute: true
+		  
 		  }
 		};
 		}
@@ -178,7 +184,74 @@ clipboard.on('success', function(e) {
 	  }
 	  
 	  
+		  _hairColorObserver(block,actual,unit){
+		  if(block){
+		   var hairColorStart=block.indexOf(Hex.F_BLOCK_STARTER)+96;
+			var inBlock="#"+block.substring(hairColorStart,hairColorStart+6);
+			
+			if(inBlock!=actual){
+//			console.log(block);
+				var blockArray=block.split("");
+				
+				
+				
+				
+				var counter=0;
+				actual=actual.replace("#","");
+				for(var i=hairColorStart;i<hairColorStart+6;i++){
+				blockArray[i]=actual[counter];
+				counter++;
+				}
+				
+				
+				
+				if(unit.avatar || unit.dlcSpotpass){
+             console.log("It's avatar");
+        
+         var startGender=block.indexOf(Hex.FFFF_IDENTIFIER)
+                +Hex.FFFF_IDENTIFIER.length+38+48;
+				
+                var c2=0;
+				for(var i=startGender+8;i<startGender+14;i++){
+				blockArray[i]=actual[c2];
+				c2++;
+				}
+         
+		 
+		 }
+				
+				
+				
+				var joined="";
+				for(var i=0;i<blockArray.length;i++){
+				joined=joined+blockArray[i];
+				}
+				
+				
+				
+				
+				this.set("item.hexBlock",joined);
+				
+				console.log("Changing color code to",actual);
+				
+				
+			}
+			else{
+			
+				//console.log("Color is the same",actual);
+			}
+			
+		  }
 		  
+		  
+		  }
+		  
+		   static get observers() {
+        return [
+          '_hairColorObserver(item.hexBlock,item.blockData.unitHairColor,item)'
+		 
+        ];
+      }
 		  
     }
 

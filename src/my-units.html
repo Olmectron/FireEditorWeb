@@ -22,14 +22,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <style include="shared-styles iron-flex iron-flex-alignment">
       :host {
         display: block;
-
+	
 		
       }
 	  
     </style>
 	<div class="horizontal layout flex wrap center-justified" style="padding: 2rem;">
 	<template is="dom-repeat" items="[[units]]" scroll-target="document">
-		<unit-item item="[[item]]"></unit-item>
+		<unit-item item="[[item]]" full-block="{{unitsBlock}}"></unit-item>
 		</template>
 		</div>
   
@@ -48,15 +48,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           units: {
             type: Array,
             notify:true,
-			observer: "_unitsLoaded"
+			observer: "_unitsLoaded",
+			reflectToAttribute: true
 			
            
-          }
+          },
+		  unitsBlock:{
+			type: String,
+			notify:true,
+			reflectToAttribute: true,
+			observer: "_unitsBlockChanged"
+		  }
 		};
 		}
-		
+		_unitsBlockChanged(val){
+			//console.log(val);
+			//console.log("inner block changed");
+		}
 		_unitsLoaded(units){
-			//console.log(units);
+//			console.log(units);
 		
 		}
     }

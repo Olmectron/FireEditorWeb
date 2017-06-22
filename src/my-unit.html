@@ -30,6 +30,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				
 				notify:true
 			},
+			loaded:{
+				type:Boolean,
+				notify:true,
+				value: false
+			},
 			hexPosition:Number,
 			hairColorEditable:Boolean,
 				nameEditable:Boolean,
@@ -48,6 +53,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		  
 		  }
 		  hexBlockChanged(block){
+		  this.set("loaded",false);
 		  //console.log("Block changed!",this.id);
 			if(!block){
 			//	console.log("Block is null");
@@ -86,7 +92,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.set("name",getWordFromHex(nameHex));
 				 this.set("blockData.unitName",getWordFromHex(nameHex));
                 
-        }                
+        }      
+			
          if(unit.avatar || unit.dlcSpotpass){
              
         
@@ -106,7 +113,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 var hair=block.substring(startGender+6,startGender+8);
                 var hairColorString=block.substring(startGender+8,startGender+14);
                 
-				this.set("blockData.unitHairColor","#"+hairColorString);
+				this.set("blockData.heritableHairColor","#"+hairColorString);
 				this.set("blockData.unitBody",build);
 				this.set("blockData.unitFace",face);
 
@@ -148,7 +155,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
          }
 		  
 		  this.setPortraitData(block);
-		  
+		  this.set("loaded",true);
 		  
 		  
 		  }
@@ -238,6 +245,8 @@ retrieveGenderLetter(){
     else return "u";
 }
 		  
+		  
+
 	  
 	  
     }
