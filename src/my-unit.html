@@ -44,7 +44,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 avatar:Boolean,
                 important:Boolean,
                 dlcSpotpass:Boolean,
-				blockData: Object,
+				blockData:{
+					type:Object,
+					notify:true
+				},
 				alive: Boolean,
 				portrait:Object
     
@@ -60,7 +63,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				return;
 			}
 		  
+			//var keys=Object.keys(this.blockData);
+		//	for(var i=0;i<keys.length;i++){
+	//			this.set("blockData."+keys[i],null);
+			
+//			}
 			this.set("blockData",new Object());
+			
+			
 			var unit=this;
 			
 		   var statsBlock=block.substring(20,36);

@@ -57,12 +57,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			<div style="padding: 10px;">
 			<div class="card card-1 vertical layout" style="position: relative;">
 				
-				<div style="position:relative; width: 128px; height: 128px;">
+				<div style="position:relative; width: 128px; height: 128px;"> <!--on-click="goToCharacter">-->
 				<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.baseName]]">
 				</iron-image>
 	<!--			<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.backName]]">
 				</iron-image>-->
-				<hair-view src="[[item.portrait.backName]]" color="[[item.blockData.unitHairColor]]"></hair-view>
+				<hair-view src="[[item.portrait.backName]]" unit="[[item]]" color="[[item.blockData.unitHairColor]]"></hair-view>
 				
 				
 				<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.hairName]]">
@@ -87,7 +87,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			</div>
 			</div>
 		
-  
+	<a href$="character/[[item.id]]" style="display:none;" id="helper"></a>
   </template>
 
   <script>
@@ -154,8 +154,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     
     },
     change: function(color) {
+	var col=color.toHexString().toUpperCase();
 //        console.log(color.toHexString());
-		esto.set("item.blockData.unitHairColor",color.toHexString().toUpperCase());
+		//esto.set("item.blockData.unitHairColor",color.toHexString().toUpperCase());
+	//	if(esto.unitDiv!=null){
+			//console.log("Updating other DIVS");
+		//	esto.unitDiv.setHairColor(color.toHexString().toUpperCase());
+			//esto.set("unitDiv.item.blockData.unitHairColor",color.toHexString().toUpperCase());
+		
+	//	}
+		//esto.item.notifyPath("")
+		
+		//if(col!="#000000"){
+		//	esto.setHairColor("#000000");
+		//}
+		//else{
+		//	esto.setHairColor("#000001");
+		//}
+		
+		esto.setHairColor(col);
+			
     }
 });
 
@@ -175,16 +193,28 @@ clipboard.on('success', function(e) {
 });*/
 		
 	  }
+	  setHairColor(col){
+	  this.item.blockData.unitHairColor=col;
+	  this.notifyPath("item.blockData.unitHairColor");
+	  
+	  }
+	  
 	  getRippleColor(item){
+		if(item){
 		if(item.blockData && item.blockData.unitHairColor){
 			return item.blockData.unitHairColor;
 			
 		}
 		else return "red";
+		}
 	  }
 	  
+	  goToCharacter(){
+		this.$.helper.click();
 	  
+	  }
 		  _hairColorObserver(block,actual,unit){
+		  
 		  if(block){
 		   var hairColorStart=block.indexOf(Hex.F_BLOCK_STARTER)+96;
 			var inBlock="#"+block.substring(hairColorStart,hairColorStart+6);
@@ -246,12 +276,20 @@ clipboard.on('success', function(e) {
 		  
 		  }
 		  
+		  
+		  
 		   static get observers() {
         return [
           '_hairColorObserver(item.hexBlock,item.blockData.unitHairColor,item)'
-		 
+		  //"_allObserver(item.*)"
+		  
         ];
       }
+	  _allObserver(c){
+	  
+		console.log("SOmething changed!");
+	  
+	  }
 		  
     }
 

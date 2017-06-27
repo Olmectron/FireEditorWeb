@@ -49,12 +49,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				
 		
 	  }
+	  
 	  setHairData(src,color,loaded){
 		if(src && color && loaded){
 		
 		var c=this.$.hairCanvas;
 		var ctx = c.getContext('2d');
-
+ctx.clearRect(0, 0, c.width, c.height);
+		
                 //Loading of the home test image - img1
                 var img1 = new Image();
                 img1.src = src;
@@ -82,10 +84,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	  }
 	  static get observers() {
         return [
-          'setHairData(src,color,loaded)'
+          'setHairData(src,color,loaded)',
+		  "unitChanged(unit)"
 		  
         ];
       }
+	  
+	  unitChanged(unit){
+		var c=this.$.hairCanvas;
+		var ctx = c.getContext('2d');
+ctx.clearRect(0, 0, c.width, c.height);
+	  }
 	  
     }
 

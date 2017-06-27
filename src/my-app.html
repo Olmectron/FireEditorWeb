@@ -28,6 +28,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="my-icons.html">
 
 <link rel="lazy-import" href="my-units.html">
+<link rel="lazy-import" href="my-character.html">
 <link rel="lazy-import" href="my-view2.html">
 <link rel="lazy-import" href="my-view3.html">
 <link rel="lazy-import" href="my-view404.html">
@@ -72,6 +73,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         color: black;
         font-weight: bold;
       }
+	  .visitors{
+		font-size: 12px;
+	  
+	  }
     </style>
 
     <app-location route="{{route}}"></app-location>
@@ -84,9 +89,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <app-drawer-layout fullbleed>
       <!-- Drawer content -->
       <app-drawer id="drawer" slot="drawer">
-        <app-toolbar>Menu</app-toolbar>
+        <app-toolbar><div class="flex">Menu</div>
+		<div class="visitors">[[visitorCounter]] visitors</div>
+		</app-toolbar>
+		
+		
         <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
           <a name="units" href="units">Units</a>
+		 <!-- <a name="character" href="character/1">Units</a>-->
           <!--<a name="view2" href="view2">Settings</a>-->
 		  
           <a name="update" on-click="downloadDecompressed" hidden$="[[!fullHex]]">Download decompressed</a>
@@ -117,7 +127,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             attr-for-selected="name"
             fallback-selection="view404"
             role="main">
-          <my-units name="units" units="{{units}}" units-block="{{unitsCopy}}"></my-units>
+          <my-units name="units" units="{{units}}" unit-div="{{unitDiv}}" units-block="{{unitsCopy}}"></my-units>
+		  <my-character name="character" 
+		  unidad="{{unidad}}" 
+		  unit-div="[[unitDiv]]"
+		  ></my-character>
           <my-view2 name="view2"></my-view2>
 		  
           <my-view404 name="view404"></my-view404>
@@ -135,9 +149,20 @@ _fileNameChanged(val){
 
 }
 unitsCopyChanged(copy){
-console.log("Copy block set");
+//console.log("Copy block set");
 
 }
+
+_characterChanged(car){
+	
+
+}
+unidadChanged(unit){
+	console.log(unit);
+
+}
+
+
       static get properties() {
         return {
           page: {
@@ -155,7 +180,17 @@ console.log("Copy block set");
 		  
           rootPattern: String,
           routeData: Object,
-          subroute: String,
+		  character:{
+			type:String,
+			notify:true,
+			observer: "_characterChanged"
+		  },
+		  subroute:{
+			type:String,
+			notify:true,
+			observer: "_subrouteChanged"
+		  
+		  },
 		  chapterFile:{
 			type:Object,
 			notify:true,
@@ -171,6 +206,11 @@ console.log("Copy block set");
 			notify:true,
 			observer: "unitsCopyChanged"
 		  },
+		  unidad:{
+			type:Object,
+			notify: true,
+			observer: "unidadChanged"
+		  },
 		  unitsHex:{
 			type:String,
 			notify:true,
@@ -180,6 +220,12 @@ console.log("Copy block set");
 		  EmblemUnits:{
 			type:Array,
 			notify:true
+		  
+		  },
+		  visitorCounter:{
+			type:Number,
+			notify:true,
+			value:0
 		  
 		  },
 		  blocksArray:{
@@ -207,6 +253,16 @@ console.log("Copy block set");
 		//}
 		
 	  }
+	  _subrouteChanged(sub){
+		if(sub.prefix=="/character"){
+			if(sub.path!=""){
+				this.set("character",sub.path.replace("/",""));
+			}
+		
+		}
+	  
+	  }
+	  
 	  downloadDecompressed(){
 	  downloadDecompressedChapter(this.fileName);
 	  
@@ -341,9 +397,22 @@ console.log("Copy block set");
       static get observers() {
         return [
           '_routePageChanged(routeData.page)',
-		  "_checkFileData(blocksArray,positionsArray,EmblemUnits)"
+		  "_checkFileData(blocksArray,positionsArray,EmblemUnits)",
+		  "getUnidadFromId(character,units)"
         ];
       }
+	  
+	  getUnidadFromId(character,units){
+	  //console.log(character);
+	  if(units && character)
+		for(var i=0;i<units.length;i++){
+			if(units[i].id==character){
+				this.set("unidad",units[i]);
+			}
+		
+		}
+	  
+	  }
 
 		readPouchFile(){
 		
@@ -361,9 +430,52 @@ console.log("Copy block set");
 //						  console.log("pouch",doc);
 						});
 		}
+		
+		signInAnonymous(){
+		
+		
+		firebase.auth().signInAnonymously().then(function(){
+			//console.log("ANON GREAT!");
+		
+		}).catch(function(error) {
+  // Handle Errors here.
+  var errorCode = error.code;
+  console.log(errorCode);
+  var errorMessage = error.message;
+  console.log(errorMessage);
+  // ...
+});
+		
+		
+		}
+		
+		
       constructor() {
         super();
 		
+		firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    // User is signed in.
+    var isAnonymous = user.isAnonymous;
+    var uid = user.uid;
+//	console.log(uid);
+    // ...
+  } else {
+    // User is signed out.
+    // ...
+  }
+  // ...
+});
+var t=this;
+firebase.database().ref("visitor-counter").on("value",function(data){
+	if(data.val()){
+		t.set("visitorCounter",data.val());
+	}
+
+});
+
+
+		this.signInAnonymous();
 		this.readPouchFile();
 		
 		this.readUnitsXML();

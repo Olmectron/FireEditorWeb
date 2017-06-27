@@ -27,9 +27,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 	  
     </style>
+	
+	<!--<div on-click="refresh">Recargar</div>-->
 	<div class="horizontal layout flex wrap center-justified" style="padding: 2rem;">
-	<template is="dom-repeat" items="[[units]]" scroll-target="document">
-		<unit-item item="[[item]]" full-block="{{unitsBlock}}"></unit-item>
+	<template id="list" is="dom-repeat" items="{{filterItems(units,update)}}" scroll-target="document">
+		<unit-item item="{{item}}" on-click="setUnitDiv" class="unitItem" full-block="{{unitsBlock}}"></unit-item>
 		</template>
 		</div>
   
@@ -39,10 +41,44 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     class MyUnits extends Polymer.Element {
       static get is() { return 'my-units'; }
 	  ready(){
+	  console.log("My units loaded!");
 		super.ready();
 		
 	  }
+	  setUnitDiv(e){
+		this.set("unitDiv",e.target.closest(".unitItem"));
 	  
+	  }
+	  filterItems(units,update){
+		if(units){
+//		console.log("Update",update);
+			var arr=[];
+			
+			for(var i=0;i<units.length;i++){
+				arr[i]=units[i];
+			
+			}
+			return arr;
+			
+		}
+	  }
+	  refresh(){
+	  console.log("reff");
+	 
+	  //this.units[1].notifyPath("blockData");
+	  
+	  //this.units[1].notifyPath("blockData.unitHairColor");
+	  
+	  /*this.$.list.render();
+	  var uns=this.units;
+	  var u=this.units[1];
+	  
+	  console.log(u.blockData);
+	  
+	  this.splice("units",1,1,u);*/
+	 
+	  }
+	 
 	  static get properties() {
         return {
           units: {
@@ -53,6 +89,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			
            
           },
+		  update:{
+			type:Number,
+			notify:true,
+			value: 0
+		  },
+		  
+		  unitDiv:{
+		  type:Object,
+		  notify: true,
+		  reflectToAttribute: true
+		  
+		  },
+		  unitItem:{
+		  type:Object,
+		  notify: true,
+		  reflectToAttribute: true
+		  
+		  },
 		  unitsBlock:{
 			type: String,
 			notify:true,

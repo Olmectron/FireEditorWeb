@@ -12,7 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="unit-item.html">
 
-<dom-module id="my-view3">
+<dom-module id="my-character">
   <template>
     <style include="shared-styles">
       :host {
@@ -22,19 +22,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
-    <div class="card">
-      <div class="circle">3</div>
-      <h1>View Three</h1>
-      <p>Modus commodo minimum eum te, vero utinam assueverit per eu.</p>
-      <p>Ea duis bonorum nec, falli paulo aliquid ei eum.Has at minim mucius aliquam, est id tempor laoreet.Pro saepe pertinax ei, ad pri animal labores suscipiantur.</p>
-    </div>
+    <div class="card-big">
+	
+	<unit-item item="{{unidad}}" unit-div="[[unitDiv]]"></unit-item>
+   </div>
   </template>
 
   <script>
-    class MyView3 extends Polymer.Element {
-      static get is() { return 'my-view3'; }
+    class MyCharacter extends Polymer.Element {
+      static get is() { return 'my-character'; }
+	  
+	  static get properties() {
+        return {
+        unidad: {
+            type:Object,
+            notify:true,
+				reflectToAttribute: true
+           
+          }};}
     }
 
-    window.customElements.define(MyView3.is, MyView3);
+    window.customElements.define(MyCharacter.is, MyCharacter);
   </script>
 </dom-module>
