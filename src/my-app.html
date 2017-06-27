@@ -21,7 +21,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 	<link rel="import" href="my-unit.html">
@@ -43,6 +45,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         display: block;
 		overflow-x: none;
       }
+	  
+	  
+	  
 
       app-drawer-layout:not([narrow]) [drawer-toggle] {
         display: none;
@@ -77,6 +82,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		font-size: 12px;
 	  
 	  }
+	  paper-dialog{
+	  z-index: 9000;
+	  }
     </style>
 
     <app-location route="{{route}}"></app-location>
@@ -85,8 +93,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         pattern="[[rootPattern]]:page"
         data="{{routeData}}"
         tail="{{subroute}}"></app-route>
-
+<paper-dialog id="shareDialog" with-backdrop>
+  <h2>Share with developer</h2>
+  <div class="wrap">You will share your save file with the developer of this app. It will help for testing purposes. The info won't be shared with anyone else. Are you okay with this?</div>
+  <div class="buttons">
+    <paper-button dialog-dismiss>Cancel</paper-button>
+    <paper-button dialog-confirm autofocus on-click="uploadChapterFile">Share</paper-button>
+  </div>
+</paper-dialog>
     <app-drawer-layout fullbleed>
+	
       <!-- Drawer content -->
       <app-drawer id="drawer" slot="drawer">
         <app-toolbar><div class="flex">Menu</div>
@@ -99,8 +115,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		 <!-- <a name="character" href="character/1">Units</a>-->
           <!--<a name="view2" href="view2">Settings</a>-->
 		  
-          <a name="update" on-click="downloadDecompressed" hidden$="[[!fullHex]]">Download decompressed</a>
+          <a name="decompress" on-click="downloadDecompressed" hidden$="[[!fullHex]]">Download decompressed</a>
 		  
+          <a name="share" on-click="showShareDialog">Share with developer</a>
 		  
           <a name="update" on-click="forceUpdate">Update App</a>
           
@@ -138,6 +155,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </iron-pages>
       </app-header-layout>
     </app-drawer-layout>
+	
+	
   </template>
 
   <script>
@@ -267,6 +286,9 @@ unidadChanged(unit){
 	  downloadDecompressedChapter(this.fileName);
 	  
 	  }
+	  getDecompressed(){
+	   return compressArrayString(window.ACTUAL_DECOMPRESSED_ARRAY);
+	  }
 	  downloadCompressed(){
 		//downloadDecompressedChapter("DecompressedChapter");
 		var stringBeforeUnits=window.ACTUAL_DECOMPRESSED_ARRAY.substring(0,
@@ -287,7 +309,7 @@ unidadChanged(unit){
 		window.ACTUAL_DECOMPRESSED_ARRAY=total;
 		
 		
-		compressArray(window.ACTUAL_DECOMPRESSED_ARRAY,this.fileName);
+		compressArrayDownload(window.ACTUAL_DECOMPRESSED_ARRAY,this.fileName);
 		
 		this.saveStringToPouch(total);
 	  }
@@ -453,7 +475,9 @@ unidadChanged(unit){
       constructor() {
         super();
 		
+var t=this;
 		firebase.auth().onAuthStateChanged(function(user) {
+  t.set("user",user);
   if (user) {
     // User is signed in.
     var isAnonymous = user.isAnonymous;
@@ -466,7 +490,6 @@ unidadChanged(unit){
   }
   // ...
 });
-var t=this;
 firebase.database().ref("visitor-counter").on("value",function(data){
 	if(data.val()){
 		t.set("visitorCounter",data.val());
@@ -567,6 +590,24 @@ return response.text();
 	  
 	  }
 	  
+	  
+	  showShareDialog(){
+	  this.$.shareDialog.open();
+	  
+	  }
+	  uploadChapterFile(){
+		if(this.user){
+		var dec=this.getDecompressed();
+		var stringRef="/shared-for-development/"+this.user.uid;
+  var newKey = firebase.database().ref(stringRef).push().key;
+		firebase.database().ref(stringRef+"/"+newKey).set(dec).then(function(){
+			showToast("Chapter file shared successfully! Thanks for your help!");
+		});
+	  
+		}
+		else showToast("There was an problem sharing your Chapter file. Please try again later.",7000);
+		
+	  }
 	  
     }
 

@@ -137,7 +137,8 @@ function modulo(a, b) {
 			return arr;
 			
 		}
-  function compressArray(sggtring,fileName){
+
+		function compressArrayDownload(sggtring,fileName){
 		var nac=stringToByteArray(sggtring);
 	//	console.log(nac);
 	   var startJava=copyOf(nac, 0xC0);
@@ -268,6 +269,8 @@ function modulo(a, b) {
                     ////  ch = (ch << num_bits) & 0xFF;
                 }
             }
+
+
             var pak_len = (pak_pos);
 //            console.log("Done");
 			
@@ -298,6 +301,164 @@ for(var i=0;i<ended.length;i++){
 //processUnits(hexBig.toUpperCase());
 
 	return ended;
+            //return ;//copyOf(pbuf,(pak_len));
+        }
+		
+		
+		
+		function compressArrayString(sggtring){
+		var nac=stringToByteArray(sggtring);
+	//	console.log(nac);
+	   var startJava=copyOf(nac, 0xC0);
+            var headerJava=getCompressedHeader(nac, nac.length - 0xC0);
+            var n=nac.slice(0xC0);
+			
+//            console.log("data length "+n.length);
+            var data=[];
+            for(var i=0;i<n.length;i++){
+                if(n[i]<0){
+                    data[i]=(n[i] & 0xFF);
+                }
+                else{
+                    data[i]=n[i];
+                }
+            }
+            var pk4_pos = 0;
+            num_bits = 8;
+            var raw_len =data.length;
+
+            var pbuf = [];
+            //byte[] aux=Arrays.copyOf(DataView.getBytes(((CMD_CODE) | (raw_len << 8))),4);
+        //System.arraycopy(cc,0, pbuf, 0, 4);
+		/*var by=toBytes(((CMD_CODE) | (raw_len << 8)));
+		
+		
+				for(var i=0;i<4;i++){
+					pbuf[i]=by[i];
+					
+				}*/
+				copyArray(toBytes(((CMD_CODE) | (raw_len << 8))),0,pbuf,0,4);
+				
+					
+				
+            //Array.Copy(BitConverter.GetBytes((CMD_CODE) | (raw_len << 8)), pbuf, 4);
+            var pak_pos = 4;
+            var raw_pos = 0;
+            HUF_InitFreqs();
+            
+            HUF_CreateFreqs(data, data.length);
+
+            HUF_InitTree();
+            HUF_CreateTree();
+
+            HUF_InitCodeTree();
+            HUF_CreateCodeTree();
+            /*int[] aux=byteToInt(codetree);
+            System.out.println("aux-----");
+            
+            for(int i=0;i<aux.length;i++){
+                System.out.println(aux[i]+"");
+            }
+            System.out.println("-----aux");
+            */
+            HUF_InitCodeWorks();
+            HUF_CreateCodeWorks();
+
+            var cod_pos = 0;
+            var clen=codetree[cod_pos];
+           if(clen<0){
+               clen=clen & 0xff;
+           }
+            var len = ((clen+1) << 1);
+           
+            //System.out.println("LEN "+len);
+            while (len-- != 0) 
+                pbuf[pak_pos++] = 
+                        codetree[cod_pos++];
+            var mask4 = 0;
+            while (raw_pos < data.length)
+            {
+              
+                var ch = data[raw_pos++];
+                if(ch<0){
+                    ch=ch & 0xff;
+                }
+                //System.out.println(raw_pos+"/"+data.length);
+
+                var nbits;
+                for (nbits = 8; nbits != 0; nbits -= num_bits)
+                {
+                    //HuffmanCode THIS IS
+					code = codes[ch & ((1 << num_bits) - 1)];
+                    ////  code = codes[ch >> (8 - num_bits)];
+
+                    len = code.nbits;
+                    //System.out.println(len+" lenas 1");
+                    
+                    //if(len<0){
+                    //    len=len & 0xFF;
+                    //}
+                    //System.out.println(len+" lenas 2");
+                    
+                    var cwork = 0;
+
+                    //byte mask = HUF_MASK;
+                    var mask = Math.abs(HUF_MASK);
+                    while (len-- != 0)
+                    {
+                        if ((mask4 >>>= Math.abs(HUF_SHIFT)) == 0)
+                        {
+                            mask4 = Math.abs(HUF_MASK4);
+                            pk4_pos = pak_pos;
+                            copyArray(toBytes(0), 0, pbuf,pk4_pos, 4);
+                            //Array.Copy(BitConverter.GetBytes(0), 0, pbuf, pk4_pos, 4);
+                            pak_pos += 4;
+                        }
+                        var codeworkInt=code.codework[cwork];
+                        if(codeworkInt<0){
+                            codeworkInt=codeworkInt & 0xff;
+                        }
+                        if((codeworkInt & mask) > 255){
+                           console.log("Greater than -- "+(codeworkInt & mask));
+						   
+                        }
+                        if ((codeworkInt & mask) != 0) 
+							
+                            copyArray(toBytes((toUint32(pbuf,pk4_pos) | mask4)),0,pbuf,pk4_pos,4);
+                            //Array.Copy(BitConverter.GetBytes(BitConverter.ToUInt32(pbuf, pk4_pos) | mask4), 0, pbuf, pk4_pos, 4);
+                        if ((mask >>>= Math.abs(HUF_SHIFT)) == 0)
+                        {
+                            mask = Math.abs(HUF_MASK);
+                            cwork++;
+                        }
+                    }
+
+                    ch >>>= num_bits;
+                    ////  ch = (ch << num_bits) & 0xFF;
+                }
+            }
+
+
+            var pak_len = (pak_pos);
+//            console.log("Done");
+			
+			var ended=copyOf(pbuf,pak_len);
+			
+			var fullCompressed=startJava.concat(headerJava).concat(ended);
+			ACTUAL_COMPRESSED_ARRAY=fullCompressed;
+			
+			var hexBig="";
+for(var i=0;i<ACTUAL_COMPRESSED_ARRAY.length;i++){
+	var hex=ACTUAL_COMPRESSED_ARRAY[i].toString(16);
+	if(hex.length==1){
+		hex="0"+hex;
+	}
+	hexBig=hexBig+hex;
+}
+
+//processUnits(hexBig.toUpperCase());
+
+	return hexBig.toUpperCase();
             //return ;//copyOf(pbuf,(pak_len));
         }
 		function copyOf(arr,length){
