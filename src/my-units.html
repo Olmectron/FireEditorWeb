@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="unit-item.html">
@@ -28,23 +29,43 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	  
     </style>
 	
-	<!--<div on-click="refresh">Recargar</div>-->
+	
+	<paper-input value="{{word}}" style="margin:12px;" always-float-label label="Search unit">
+	</paper-input>
 	<div class="horizontal layout flex wrap center-justified" style="padding: 2rem;">
-	<template id="list" is="dom-repeat" items="{{filterItems(units,update)}}" scroll-target="document">
-		<unit-item item="{{item}}" on-click="setUnitDiv" class="unitItem" full-block="{{unitsBlock}}"></unit-item>
+	<template id="list" is="dom-repeat" 
+	filter="{{computeFilter(word)}}" observe="blockData.unitHairColor"
+	items="{{units}}" scroll-target="document" mutable-data>
+		<unit-item item="{{item}}" on-click="setUnitDiv"
+				
+		class="unitItem"></unit-item>
 		</template>
 		</div>
   
   </template>
 
   <script>
-    class MyUnits extends Polymer.Element {
+    class MyUnits extends Polymer.MutableData(Polymer.Element) {
       static get is() { return 'my-units'; }
 	  ready(){
 	  console.log("My units loaded!");
 		super.ready();
 		
 	  }
+	  computeFilter(string) {
+        if (!string) {
+          // set filter to null to disable filtering
+          return null;
+        } else {
+          // return a filter function for the current search string
+          string = string.toLowerCase();
+          return function(unit) {
+            var first = unit.name.toLowerCase();
+            return (first.indexOf(string) != -1);
+
+          };
+        }
+      }
 	  setUnitDiv(e){
 		this.set("unitDiv",e.target.closest(".unitItem"));
 	  
@@ -64,7 +85,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	  }
 	  refresh(){
 	  console.log("reff");
-	 
+	 this.set("update",this.update+1);
 	  //this.units[1].notifyPath("blockData");
 	  
 	  //this.units[1].notifyPath("blockData.unitHairColor");
@@ -92,7 +113,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		  update:{
 			type:Number,
 			notify:true,
-			value: 0
+			value: 0,
+			observer: "updateChanged"
 		  },
 		  
 		  unitDiv:{
@@ -112,8 +134,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			notify:true,
 			reflectToAttribute: true,
 			observer: "_unitsBlockChanged"
+		  },
+		page:{
+			type:String,
+			notify:true,
+			observer: "_pageChanged"
 		  }
 		};
+		}
+		
+		
+		 static get observers() {
+        return [
+		
+		  
+        ];
+      }
+	  
+	  
+		updateChanged(val){
+		
+		var t=this;
+/*		this.set("word","FIRE EMBLEM");
+		setTimeout(function(){t.set("word","");},2)
+		//this.set("word","");*/
+		if(this.units){
+			this.notifyPath("units");
+		}
 		}
 		_unitsBlockChanged(val){
 			//console.log(val);
@@ -122,6 +169,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		_unitsLoaded(units){
 //			console.log(units);
 		
+		}
+		_pageChanged(page){
+			if(page=="units"){
+					if(this.units){
+					this.notifyPath("units");
+				}
+			}
 		}
     }
 

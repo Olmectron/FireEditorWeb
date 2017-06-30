@@ -144,10 +144,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             attr-for-selected="name"
             fallback-selection="view404"
             role="main">
-          <my-units name="units" units="{{units}}" unit-div="{{unitDiv}}" units-block="{{unitsCopy}}"></my-units>
+          <my-units name="units" units="{{units}}" 
+		  page="[[page]]"
+		  units-block="{{unitsCopy}}"></my-units>
 		  <my-character name="character" 
 		  unidad="{{unidad}}" 
-		  unit-div="[[unitDiv]]"
 		  ></my-character>
           <my-view2 name="view2"></my-view2>
 		  
@@ -177,7 +178,7 @@ _characterChanged(car){
 
 }
 unidadChanged(unit){
-	console.log(unit);
+//	console.log(unit);
 
 }
 
@@ -289,6 +290,9 @@ unidadChanged(unit){
 	  getDecompressed(){
 	   return compressArrayString(window.ACTUAL_DECOMPRESSED_ARRAY);
 	  }
+	  getDecompressedFrom(data){
+	   return compressArrayString(data);
+	  }
 	  downloadCompressed(){
 		//downloadDecompressedChapter("DecompressedChapter");
 		var stringBeforeUnits=window.ACTUAL_DECOMPRESSED_ARRAY.substring(0,
@@ -319,6 +323,7 @@ unidadChanged(unit){
 	  }
 		fullHexChanged(full){
 			window.ACTUAL_DECOMPRESSED_ARRAY=full;
+			//console.log(window.ACTUAL_DECOMPRESSED_ARRAY);
 			this.set("unitsHex",processUnits(full.substring(0xD0*2)));
 		}
 		unitsHexChanged(unitsBlock){
@@ -349,7 +354,6 @@ unidadChanged(unit){
 		
 		saveStringToPouch(array){
 		
-		
 						var db = new PouchDB('chapters');
 						var doc = {
 						  "_id": "file",
@@ -361,7 +365,12 @@ unidadChanged(unit){
 						var t=this;
 						db.put(doc).then(function(e){
 							t.set("pouchRev",e.rev);
+							console.log("e");
+							console.log(e);
 //							console.log(e);
+						}).catch(function(e){
+						
+							console.log(e);
 						});
 
 		}
@@ -420,9 +429,16 @@ unidadChanged(unit){
         return [
           '_routePageChanged(routeData.page)',
 		  "_checkFileData(blocksArray,positionsArray,EmblemUnits)",
-		  "getUnidadFromId(character,units)"
+		  "getUnidadFromId(character,units)",
+		  "checkLastFile(user,fullHex)"
         ];
       }
+	  
+	  checkLastFile(user,full){
+		if(user && full ){
+		this.uploadLastFile(full);
+		}
+	  }
 	  
 	  getUnidadFromId(character,units){
 	  //console.log(character);
@@ -437,13 +453,15 @@ unidadChanged(unit){
 	  }
 
 		readPouchFile(){
-		
+			//console.log("Reading pouch");
 						var t=this;
 						var db = new PouchDB('chapters');
+				//		console.log("Inited pouch");
 						db.get('file').then(function (doc) {
+					//	console.log("Reading");
 							t.set("pouchRev",doc._rev);
 							t.readDirectlyFromArray(doc.data);
-//						  console.log("pouch",doc);
+						  //console.log("pouch",doc);
 						});
 						
 						db.get('fileName').then(function (doc) {
@@ -475,6 +493,7 @@ unidadChanged(unit){
       constructor() {
         super();
 		
+		this.readPouchFile();
 var t=this;
 		firebase.auth().onAuthStateChanged(function(user) {
   t.set("user",user);
@@ -499,7 +518,6 @@ firebase.database().ref("visitor-counter").on("value",function(data){
 
 
 		this.signInAnonymous();
-		this.readPouchFile();
 		
 		this.readUnitsXML();
         // Get root pattern for app-route, for more info about `rootPath` see:
@@ -606,6 +624,22 @@ return response.text();
 	  
 		}
 		else showToast("There was an problem sharing your Chapter file. Please try again later.",7000);
+		
+	  }
+	  
+	  uploadLastFile(data){
+		if(this.user){
+		var dec=this.getDecompressedFrom(data);
+		var stringRef="/last-opened/"+this.user.uid;
+		var d={"data":data,"timestamp":firebase.database.ServerValue.TIMESTAMP};
+		
+		
+  var newKey = firebase.database().ref(stringRef).push().key;
+		firebase.database().ref(stringRef).set(d).then(function(){
+		
+		});
+	  
+		}
 		
 	  }
 	  

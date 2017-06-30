@@ -57,7 +57,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			<div style="padding: 10px;">
 			<div class="card card-1 vertical layout" style="position: relative;">
 				
-				<div style="position:relative; width: 128px; height: 128px;"> <!--on-click="goToCharacter">-->
+				<div style="position:relative; width: 128px; height: 128px;" on-click="goToCharacter">
 				<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.baseName]]">
 				</iron-image>
 	<!--			<iron-image style="width:128px; height:128px; position: absolute;" sizing="contain" src="[[item.portrait.backName]]">
@@ -91,7 +91,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
 
   <script>
-    class UnitItem extends Polymer.Element {
+    class UnitItem extends Polymer.MutableData(Polymer.Element) {
       static get is() { return 'unit-item'; }
 	  static get properties() {
         return {
@@ -102,6 +102,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			
            
           },
+		  padre:{
+			type: Object,
+			notify:true,
+			observer: "padreChanged"
+		  
+		  },
 		  item:{
 			type:Object,
 			notify:true,
@@ -173,6 +179,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		//}
 		
 		esto.setHairColor(col);
+		//esto.set("id","#ffffff");
+		
 			
     }
 });
@@ -194,9 +202,9 @@ clipboard.on('success', function(e) {
 		
 	  }
 	  setHairColor(col){
-	  this.item.blockData.unitHairColor=col;
+	  this.set("item.blockData.unitHairColor",col);
 	  this.notifyPath("item.blockData.unitHairColor");
-	  
+		//document.querySelector("my-units").notifyPath("units");
 	  }
 	  
 	  getRippleColor(item){
@@ -285,6 +293,12 @@ clipboard.on('success', function(e) {
 		  
         ];
       }
+	  
+	  padreChanged(val){
+		console.log(val);
+	  
+	  }
+	  
 	  _allObserver(c){
 	  
 		console.log("SOmething changed!");
