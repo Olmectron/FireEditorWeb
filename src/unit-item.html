@@ -87,7 +87,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			</div>
 			</div>
 		
-	<a href$="character/[[item.id]]" style="display:none;" id="helper"></a>
+	<a href$="character/[[item.hexBlock]]" style="display:none;" id="helper"></a>
   </template>
 
   <script>
@@ -121,7 +121,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		  }
 		};
 		}
-	  
+	  getHairColor(unit){
+		
+		return unit.blockData.unitHairColor;
+	  }
 	  _colorChanged(val){
 		console.log(val);
 	  
@@ -226,25 +229,28 @@ clipboard.on('success', function(e) {
 		  if(block){
 		   var hairColorStart=block.indexOf(Hex.F_BLOCK_STARTER)+96;
 			var inBlock="#"+block.substring(hairColorStart,hairColorStart+6);
+			var startColor=block.indexOf(Hex.DLC_IDENTIFIER)+Hex.DLC_IDENTIFIER.length+((0x09)*2);
+			var dlcBlock="#"+block.substring(startColor,startColor+6);
 			
-			if(inBlock!=actual){
+			if(inBlock!=actual && !unit.dlcSpotpass){
 //			console.log(block);
 				var blockArray=block.split("");
 				
 				
 				
 				
-				var counter=0;
-				actual=actual.replace("#","");
-				for(var i=hairColorStart;i<hairColorStart+6;i++){
-				blockArray[i]=actual[counter];
-				counter++;
-				}
+					var counter=0;
+					actual=actual.replace("#","");
+					for(var i=hairColorStart;i<hairColorStart+6;i++){
+					blockArray[i]=actual[counter];
+					counter++;
+					}
+				
 				
 				
 				
 				if(unit.avatar || unit.dlcSpotpass){
-             console.log("It's avatar");
+				
         
          var startGender=block.indexOf(Hex.FFFF_IDENTIFIER)
                 +Hex.FFFF_IDENTIFIER.length+38+48;
@@ -274,6 +280,45 @@ clipboard.on('success', function(e) {
 				
 				
 			}
+			else if(dlcBlock!=actual && unit.dlcSpotpass){
+			var blockArray=block.split("");
+				
+			
+				
+				  var counter=0;
+           actual=actual.replace("#","");
+					for(var i=startColor;i<startColor+6;i++){
+					blockArray[i]=actual[counter];
+					counter++;
+					}
+          if(unit.avatar || unit.dlcSpotpass){
+				
+        
+         var startGender=block.indexOf(Hex.FFFF_IDENTIFIER)
+                +Hex.FFFF_IDENTIFIER.length+38+48;
+				
+                var c2=0;
+				for(var i=startGender+8;i<startGender+14;i++){
+				blockArray[i]=actual[c2];
+				c2++;
+				}
+         
+		 
+		 }
+				var joined="";
+				for(var i=0;i<blockArray.length;i++){
+				joined=joined+blockArray[i];
+				}
+				
+				
+				
+				
+				this.set("item.hexBlock",joined);
+				
+				console.log("Changing color code to",actual);
+				
+			
+			}
 			else{
 			
 				//console.log("Color is the same",actual);
@@ -285,10 +330,39 @@ clipboard.on('success', function(e) {
 		  }
 		  
 		  
+		  _nameObserver(block,name, unit){
 		  
+			if(name && unit && unit.nameEditable==true)
+		  if(block){
+		   var nameStart=block.
+                indexOf(Hex.FFFF_IDENTIFIER)+
+                Hex.FFFF_IDENTIFIER.length+30;
+                       var blockArray=block.split("");
+          
+		  var nombre="";
+                        var wordCount=0;
+                        for(var i=0;i<26;i++){
+                            if(i%2==0){
+                                if(wordCount<name.length)
+                                nombre=nombre+getHexFromLetter(name[wordCount]);
+                                else
+                                nombre=nombre+"00";
+                                
+                                wordCount++;
+                            }
+                            else{
+                                nombre=nombre+"00";
+                            }
+                            
+                        }
+                        block=block.substring(0,nameStart)+nombre+block.substring(nameStart+52);
+						this.set("item.hexBlock",block);
+		  }
+		  }
 		   static get observers() {
         return [
-          '_hairColorObserver(item.hexBlock,item.blockData.unitHairColor,item)'
+          '_hairColorObserver(item.hexBlock,item.blockData.unitHairColor,item)',
+		  "_nameObserver(item.hexBlock,item.name,item)"
 		  //"_allObserver(item.*)"
 		  
         ];

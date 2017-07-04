@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="unit-item.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
 
 <dom-module id="my-character">
   <template>
@@ -24,7 +25,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <div class="card-big">
 	
-	<unit-item item="{{unidad}}" unit-div="[[unitDiv]]"></unit-item>
+	<unit-item item="{{unidad}}"></unit-item>
+	<paper-input value="{{unidad.name}}" hidden$="[[!unidad.nameEditable]]" label="Name" maxlength="12"></paper-input>
    </div>
   </template>
 

@@ -985,10 +985,10 @@ var mask = Math.abs(HUF_MASK);
 	
 	
 function decompressArray(res){
-	
+//	console.log(res.byteLength);
 	var heador=copyOf(Array.from(new Uint8Array(res)),0XC0);
 //	console.log(heador);
-	var s=res.slice(0XD0)
+	var s=res.slice(0XD0);
 	    
 		
     /*var byteArray=getByteArrayFromString(s);
@@ -1113,7 +1113,48 @@ for(var i=0;i<fullArray.length;i++){
 }
 
 var ACTUAL_COMPRESSED_ARRAY=[];
+ function str2ab(string,callback) {
+       /* var buf = new ArrayBuffer(arr.length); // 2 bytes for each char
+       var bufView = new Uint8Array(buf);
+       for (var i=0; i<arr.length; i++) {
+         bufView[i] = arr[i];
+       }
+       return buf;*/
+	//   var ut=new Uint8Array(stringToByteArray(string));
+	//console.log(ut);
+	console.log(stringToByteArray(string));
+	var ut=new Uint8Array(stringToByteArray(string));
+	
+    var blob = new Blob([ut],{type:"application/octect-stream"});
+var fileReader = new FileReader();
+	   var file = new File([blob],"ChapterFile");
 
+	
+	fileReader.onload = function() {
+    callback(this.result);
+	
+};
+fileReader.readAsArrayBuffer(file);
+	   
+     }
+function stringToArrayBuffer(string){
+	var uint8Array  = new Uint8Array(stringToByteArray(string));
+var arrayBuffer = uint8Array.buffer;
+return arrayBuffer;
+	
+	/*var ut=new Uint8Array(stringToByteArray(string));
+	console.log(ut);
+	var arrayBuffer;
+var fileReader = new FileReader();
+    var blob = new Blob([ut]);
+	
+	fileReader.onload = function() {
+    arrayBuffer = this.result;
+	callback(arrayBuffer);
+};
+fileReader.readAsArrayBuffer(blob);
+	*/
+}
 function downloadCompressedChapter(reportName) {
 	var ut=new Uint8Array(ACTUAL_COMPRESSED_ARRAY);
 	
@@ -1337,8 +1378,40 @@ function processUnits(full){
 	
 	
 	
-	
-	
+	function toUTF8Array(str) {
+    var utf8 = [];
+    for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+            utf8.push(0xc0 | (charcode >> 6), 
+                      0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+            utf8.push(0xe0 | (charcode >> 12), 
+                      0x80 | ((charcode>>6) & 0x3f), 
+                      0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+            i++;
+            // UTF-16 encodes 0x10000-0x10FFFF by
+            // subtracting 0x10000 and splitting the
+            // 20 bits of 0x0-0xFFFFF into two halves
+            charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+                      | (str.charCodeAt(i) & 0x3ff));
+            utf8.push(0xf0 | (charcode >>18), 
+                      0x80 | ((charcode>>12) & 0x3f), 
+                      0x80 | ((charcode>>6) & 0x3f), 
+                      0x80 | (charcode & 0x3f));
+        }
+    }
+    return utf8;
+}
+	function getHexFromLetter(letter){
+        
+        return getHexPair(toUTF8Array(letter)[0]);
+    }
 	
 	
 	 

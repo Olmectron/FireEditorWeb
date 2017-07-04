@@ -181,7 +181,25 @@ unidadChanged(unit){
 //	console.log(unit);
 
 }
+userChanged(user){
+	if(user && user.uid){
+//	console.log(user.uid);
+		this.readPouchFile(user.uid);
+	}
+}
+compressHexChanged(array){
+var t=this;
+t.set("fullHex",decompressArray(stringToArrayBuffer(array)));
+//console.log(array);
+//			str2ab(array,function(res){
+			
+			//console.log(res.byteLength);
+			//console.log(res);
+	//	t.set("fullHex",decompressArray(res));
+		//console.log(t.fullHex.substring(0,200));	
+		//	});
 
+}
 
       static get properties() {
         return {
@@ -190,6 +208,12 @@ unidadChanged(unit){
             reflectToAttribute: true,
             observer: '_pageChanged',
           },
+		  user:{
+			type:Object,
+			notify:true,
+			observer: "userChanged"
+		  
+		  },
 		  fileName:{
 			type:String,
 			notify:true,
@@ -215,6 +239,13 @@ unidadChanged(unit){
 			type:Object,
 			notify:true,
 			observer: "chapterFileChanged"
+		  },
+		  compressHex:{
+			type:String,
+			notify:true,
+			observer: "compressHexChanged"
+			
+		  
 		  },
 		  fullHex:{
 			type:String,
@@ -314,7 +345,6 @@ unidadChanged(unit){
 		
 		
 		compressArrayDownload(window.ACTUAL_DECOMPRESSED_ARRAY,this.fileName);
-		
 		this.saveStringToPouch(total);
 	  }
 	  EmblemUnitsObserver(val){
@@ -349,11 +379,14 @@ unidadChanged(unit){
 		
 		}
 		readDirectlyFromArray(array){
-			this.set("fullHex",(array));
+		this.set("compressHex",array);
+			
 		}
 		
 		saveStringToPouch(array){
+		this.uploadToCompressed(array);
 		
+		/*
 						var db = new PouchDB('chapters');
 						var doc = {
 						  "_id": "file",
@@ -372,7 +405,7 @@ unidadChanged(unit){
 						
 							console.log(e);
 						});
-
+*/
 		}
 		
 		chapterFileChanged(chapter){
@@ -389,7 +422,7 @@ unidadChanged(unit){
 			if(this.$.chapterInput.files[0]){
 				//console.log(this.$.chapterInput.files[0]);
 				
-						var db = new PouchDB('chapters');
+						/*var db = new PouchDB('chapters');
 				var doc = {
 						  "_id": "fileName",
 						  "data":this.$.chapterInput.files[0].name
@@ -404,7 +437,7 @@ unidadChanged(unit){
 							t.set("fileName",doc.data);
 //							console.log(e);
 						});
-						
+						*/
 						
 				this.set("chapterFile",this.$.chapterInput.files[0]);
 				
@@ -430,7 +463,7 @@ unidadChanged(unit){
           '_routePageChanged(routeData.page)',
 		  "_checkFileData(blocksArray,positionsArray,EmblemUnits)",
 		  "getUnidadFromId(character,units)",
-		  "checkLastFile(user,fullHex)"
+		  "checkLastFile(user,compressHex)"
         ];
       }
 	  
@@ -444,31 +477,39 @@ unidadChanged(unit){
 	  //console.log(character);
 	  if(units && character)
 		for(var i=0;i<units.length;i++){
-			if(units[i].id==character){
+			if(units[i].hexBlock==character){
 				this.set("unidad",units[i]);
 			}
 		
 		}
 	  
 	  }
-
-		readPouchFile(){
+	
+		readPouchFile(uid){
+		var t=this;
+			firebase.database().ref("/last-opened/"+uid).once("value",function(snap){
+				var d=snap.val();
+				if(d.data){
+					
+							t.readDirectlyFromArray(d.data);
+				
+				}
+			});
 			//console.log("Reading pouch");
-						var t=this;
-						var db = new PouchDB('chapters');
+					//	var t=this;
+					//	var db = new PouchDB('chapters');
 				//		console.log("Inited pouch");
-						db.get('file').then(function (doc) {
+						//db.get('file').then(function (doc) {
 					//	console.log("Reading");
-							t.set("pouchRev",doc._rev);
-							t.readDirectlyFromArray(doc.data);
+					//		t.set("pouchRev",doc._rev);
 						  //console.log("pouch",doc);
-						});
+						//});
 						
-						db.get('fileName').then(function (doc) {
-							t.set("nameRev",doc._rev);
-							t.set("fileName",doc.data);
+						//db.get('fileName').then(function (doc) {
+						//	t.set("nameRev",doc._rev);
+						//	t.set("fileName",doc.data);
 //						  console.log("pouch",doc);
-						});
+						//});
 		}
 		
 		signInAnonymous(){
@@ -493,7 +534,7 @@ unidadChanged(unit){
       constructor() {
         super();
 		
-		this.readPouchFile();
+		//this.readPouchFile();
 var t=this;
 		firebase.auth().onAuthStateChanged(function(user) {
   t.set("user",user);
@@ -501,6 +542,7 @@ var t=this;
     // User is signed in.
     var isAnonymous = user.isAnonymous;
     var uid = user.uid;
+	
 //	console.log(uid);
     // ...
   } else {
@@ -629,11 +671,11 @@ return response.text();
 	  
 	  uploadLastFile(data){
 		if(this.user){
-		var dec=this.getDecompressedFrom(data);
+		//var dec=this.getDecompressedFrom(data);
 		var stringRef="/last-opened/"+this.user.uid;
 		var d={"data":data,"timestamp":firebase.database.ServerValue.TIMESTAMP};
 		
-		
+//		console.log("uploading last file");
   var newKey = firebase.database().ref(stringRef).push().key;
 		firebase.database().ref(stringRef).set(d).then(function(){
 		
@@ -642,6 +684,23 @@ return response.text();
 		}
 		
 	  }
+	  
+	    uploadToCompressed(data){
+		if(this.user){
+		var dec=this.getDecompressedFrom(data);
+		var stringRef="/last-opened/"+this.user.uid;
+		var d={"data":dec,"timestamp":firebase.database.ServerValue.TIMESTAMP};
+		
+		//console.log("uploading last file");
+  var newKey = firebase.database().ref(stringRef).push().key;
+		firebase.database().ref(stringRef).set(d).then(function(){
+		
+		});
+	  
+		}
+		
+	  }
+	  
 	  
     }
 

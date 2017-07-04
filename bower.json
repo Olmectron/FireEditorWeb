@@ -41,7 +41,8 @@
     "iron-checked-element-behavior": "1 - 2",
     "iron-validatable-behavior": "1 - 2",
     "iron-form-element-behavior": "1 - 2",
-    "paper-ripple": "1 - 2"
+    "paper-ripple": "1 - 2",
+    "iron-selector": "1 - 2"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^6.0.0-prerelease.7"
