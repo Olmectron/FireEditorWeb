@@ -105,7 +105,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	
       <!-- Drawer content -->
       <app-drawer id="drawer" slot="drawer">
-        <app-toolbar><div class="flex">Menu</div>
+        <app-toolbar><div class="flex">[[actualVersion]]</div>
 		<div class="visitors">[[visitorCounter]] visitors</div>
 		</app-toolbar>
 		
@@ -489,7 +489,7 @@ t.set("fullHex",decompressArray(stringToArrayBuffer(array)));
 		var t=this;
 			firebase.database().ref("/last-opened/"+uid).once("value",function(snap){
 				var d=snap.val();
-				if(d.data){
+				if(d && d.data){
 					
 							t.readDirectlyFromArray(d.data);
 				

@@ -22,5 +22,5 @@ module.exports = {
 	"/res/values/strings/*",
 	"/res/images/units/**/*"
   ],
-  navigateFallback: 'index.html',
+  navigateFallback: 'index.html'
 };
