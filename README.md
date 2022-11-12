@@ -6,8 +6,6 @@ Right now, all you can do is load a compressed file (yes, you don't need to use 
 
 See it in action here: http://olmectron.firebaseapp.com/
 
-You can't edit a thing right now.
-
 It was build upon Polymer Starter Kit 3.0.
 
 Do you want to know Polymer? Go here: https://www.polymer-project.org/2.0/start/
