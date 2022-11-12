@@ -8,4 +8,4 @@ See it in action here: http://olmectron.firebaseapp.com/
 
 It was build upon Polymer Starter Kit 3.0.
 
-Do you want to know Polymer? Go here: https://www.polymer-project.org/2.0/start/
+Do you want to know Polymer? Go here: [https://www.polymer-project.org/2.0/start/](https://polymer-library.polymer-project.org/2.0/docs/about_20)
